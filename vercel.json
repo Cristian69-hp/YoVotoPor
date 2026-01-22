@@ -1,0 +1,12 @@
+{
+    "rewrites": [
+        {
+            "source": "/henry-riaño",
+            "destination": "/HenryRiaño/index.html"
+        },
+        {
+            "source": "/raul-machado",
+            "destination": "/RaulMachado/index.html"
+        }
+    ]
+}
