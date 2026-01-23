@@ -3,193 +3,258 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Símulador de Votación - Raúl Machado</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprende a Votar - Raúl Machado</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;800&display=swap"
         rel="stylesheet">
     <style>
         :root {
             --primary-orange: #FF6B35;
             --primary-dark: #cc562a;
-            --bg-color: #f8fafc;
+            --bg-color: #0f172a;
+            --paper-color: #ffffff;
             --text-main: #1e293b;
+            --text-muted: #64748b;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
 
-        body,
-        html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+        body {
             font-family: 'Inter', sans-serif;
-            background: #fff;
+            background: var(--paper-color);
+            min-height: 100vh;
+            overflow: hidden;
         }
 
+        /* Pages */
         .page {
             position: absolute;
             width: 100%;
             height: 100%;
+            top: 0;
+            left: 0;
             display: none;
             flex-direction: column;
-            background: #fff;
         }
 
         .page.active {
             display: flex;
         }
 
-        /* Home Page */
+        /* Welcome Page */
         #page1 {
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://i.ibb.co/fVHzMmSC/Raul-Machado-IMG.jpg') center bottom/contain no-repeat;
-            background-color: #000;
-            justify-content: flex-end;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+                url('https://i.ibb.co/fVHzMmSC/Raul-Machado-IMG.jpg') center/cover no-repeat;
+            color: white;
+            justify-content: center;
             align-items: center;
-            padding-bottom: 50px;
+            text-align: center;
         }
 
         .welcome-card {
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(15px);
-            padding: 30px;
-            border-radius: 25px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            color: white;
+            padding: 40px;
+            border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            animation: slideUp 0.8s ease-out;
+            max-width: 600px;
+            animation: fadeInDown 1s ease-out;
         }
 
         h1 {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 3rem;
-            margin-bottom: 10px;
+            font-size: 5rem;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+            line-height: 0.9;
         }
 
         .btn {
+            display: inline-block;
+            padding: 20px 60px;
             background: var(--primary-orange);
             color: white;
-            border: none;
-            padding: 15px 40px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
             border-radius: 50px;
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.8rem;
+            border: none;
             cursor: pointer;
-            width: 100%;
-            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+            letter-spacing: 2px;
         }
 
-        /* Voting Screen */
-        .header {
-            background: white;
-            padding: 15px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-            text-align: center;
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.6);
         }
 
-        .header h2 {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.5rem;
+        .step-tag {
+            background: rgba(255, 107, 53, 0.1);
             color: var(--primary-orange);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: inline-block;
         }
 
-        /* Canvas & SVG Core */
-        .viewport {
-            flex: 1;
+        /* SVG Voting Container */
+        .svg-container {
             position: relative;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            background: #e2e8f0;
-            touch-action: none;
+            background: #f5f5f5;
         }
 
-        #transformContainer {
-            position: absolute;
-            transform-origin: 0 0;
-            will-change: transform;
-        }
-
-        #ballotImg {
-            display: block;
-            pointer-events: none;
-            user-select: none;
-        }
-
-        #ballotCanvas {
+        .svg-wrapper {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-        }
-
-        /* UI Controls */
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 20px;
-            pointer-events: none;
-        }
-
-        .control-btn {
-            background: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            font-size: 1.5rem;
+            overflow: auto;
+            cursor: crosshair;
             display: flex;
             align-items: center;
             justify-content: center;
-            pointer-events: all;
-            color: var(--text-main);
         }
 
-        .next-btn {
+        #svgImage {
+            display: block;
+            transition: transform 0.3s ease;
+            max-width: none;
+        }
+
+        #drawCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* Header Instruction */
+        .instruction-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+            color: white;
+            padding: 20px;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .instruction-header h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .instruction-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .zoom-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
             background: var(--primary-orange);
             color: white;
-            width: auto;
-            border-radius: 50px;
-            padding: 0 25px;
-            font-family: 'Bebas Neue', sans-serif;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        /* Final Page */
-        #page3 {
+        .zoom-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        .zoom-level {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--text-main);
+            min-width: 60px;
+        }
+
+        /* Success Page */
+        #page4 {
+            background: white;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 20px;
+            padding: 40px;
         }
 
-        .success-circle {
-            width: 100px;
-            height: 100px;
+        .success-icon {
+            width: 150px;
+            height: 150px;
             background: #22c55e;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto 30px;
             color: white;
-            font-size: 3rem;
-            margin-bottom: 20px;
+            font-size: 5rem;
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(34, 197, 94, 0.3);
         }
 
-        @keyframes slideUp {
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #ef4444;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
             from {
                 opacity: 0;
-                transform: translateY(50px);
+                transform: translateY(-50px);
             }
 
             to {
@@ -197,171 +262,320 @@
                 transform: translateY(0);
             }
         }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+
+            .instruction-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .instruction-header p {
+                font-size: 0.9rem;
+            }
+
+            .zoom-controls {
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .zoom-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <!-- PAGE 1 -->
+    <!-- PAGE 1: Welcome -->
     <div class="page active" id="page1">
         <div class="welcome-card">
+            <div class="step-tag" style="background: rgba(255,255,255,0.2); color: white;">Simulador Electoral</div>
             <h1>RAÚL MACHADO</h1>
-            <p style="margin-bottom: 25px; opacity: 0.9;">¿Quieres aprender a votar por Raúl Machado?</p>
+            <p style="font-size: 1.5rem; margin-bottom: 30px; opacity: 0.9;">¿Quieres aprender a votar por Raúl Machado?
+            </p>
             <button class="btn" onclick="goToPage(2)">INICIAR A VOTAR</button>
         </div>
     </div>
 
-    <!-- PAGE 2 (Voting) -->
+    <!-- PAGE 2: Party Selection (SVG) -->
     <div class="page" id="page2">
-        <div class="header">
-            <h2>DIBUJA UNA [X] EN EL PARTIDO DE LA U</h2>
-            <p style="font-size: 0.8rem; color: #64748b;">(Usa 1 dedo para rayar, 2 para mover/zoom)</p>
+        <div class="instruction-header">
+            <div class="step-tag" style="background: white; color: var(--primary-orange);">Paso 01</div>
+            <h2>MARCA EL PARTIDO DE LA U</h2>
+            <p>Dibuja una <b>X</b> sobre el logo del Partido de la U en el tarjetón</p>
         </div>
-        <div class="viewport" id="viewport">
-            <div id="transformContainer">
-                <img id="ballotImg" src="SVG/archivo.svg" alt="Tarjetón">
-                <canvas id="ballotCanvas"></canvas>
+
+        <div class="svg-container">
+            <div class="svg-wrapper" id="svgWrapper2">
+                <img id="svgImage2" src="SVG/archivo.svg" alt="Tarjetón Electoral">
+                <canvas id="drawCanvas2"></canvas>
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomOut(2)">-</button>
+                <div class="zoom-level" id="zoomLevel2">70%</div>
+                <button class="zoom-btn" onclick="zoomIn(2)">+</button>
             </div>
         </div>
-        <div class="controls">
-            <button class="control-btn" onclick="clearCanvas()">🔄</button>
-            <button class="control-btn next-btn" onclick="goToPage(3)">SIGUIENTE</button>
+    </div>
+
+    <!-- PAGE 3: Number Selection (SVG with Zoom) -->
+    <div class="page" id="page3">
+        <div class="instruction-header">
+            <div class="step-tag" style="background: white; color: var(--primary-orange);">Paso 02</div>
+            <h2>MARCA EL NÚMERO 104</h2>
+            <p>Haz <b>zoom</b> y dibuja una <b>X</b> sobre el número 104 de Raúl Machado</p>
+        </div>
+
+        <div class="svg-container">
+            <div class="svg-wrapper" id="svgWrapper3">
+                <img id="svgImage3" src="SVG/archivo.svg" alt="Tarjetón Electoral">
+                <canvas id="drawCanvas3"></canvas>
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomOut(3)">-</button>
+                <div class="zoom-level" id="zoomLevel3">100%</div>
+                <button class="zoom-btn" onclick="zoomIn(3)">+</button>
+            </div>
         </div>
     </div>
 
-    <!-- PAGE 3 (Success) -->
-    <div class="page" id="page3">
-        <div class="success-circle">✓</div>
-        <h1>¡MUY BIEN!</h1>
-        <p style="margin-bottom: 30px; color: #64748b;">Ya sabes como marcar tu voto correctamente.</p>
-        <button class="btn" onclick="resetAll()">VOLVER A EMPEZAR</button>
+    <!-- PAGE 4: Success -->
+    <div class="page" id="page4">
+        <div class="success-icon">✓</div>
+        <h1 style="color: var(--primary-orange);">¡PROCESO EXITOSO!</h1>
+        <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; max-width: 500px;">
+            Has aprendido correctamente cómo votar por <b>Raúl Machado</b>. ¡Gracias por participar!
+        </p>
+
+        <div
+            style="background: #fff7ed; padding: 30px; border-radius: 20px; border: 2px dashed var(--primary-orange); margin-bottom: 40px;">
+            <p style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--primary-orange);">
+                104 - PARTIDO DE LA U
+            </p>
+        </div>
+
+        <button class="btn" onclick="restart()">VOLVER A PRACTICAR</button>
     </div>
 
+    <!-- Error Toast -->
+    <div id="toast" class="toast">¡Marca en el lugar correcto! Inténtalo de nuevo.</div>
+
     <script>
-        // State
-        let transform = { x: 0, y: 0, scale: 0.7 }; // Initial scale at 70%
-        let touchData = { isDrawing: false, lastX: 0, lastY: 0, distance: 0, centerX: 0, centerY: 0 };
-        const view = document.getElementById('viewport');
-        const container = document.getElementById('transformContainer');
-        const canvas = document.getElementById('ballotCanvas');
-        const img = document.getElementById('ballotImg');
-        const ctx = canvas.getContext('2d');
+        let currentPage = 1;
+        let scales = { 2: 1, 3: 1 }; // Escalas iniciales
+        let isDrawing = false;
+        let currentPath = [];
 
-        function goToPage(n) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(`page${n}`).classList.add('active');
-            if (n === 2) initVoting();
+        // Coordenadas de las zonas válidas (ajustar según el SVG real)
+        const validZones = {
+            party: { x: 0.15, y: 0.25, width: 0.2, height: 0.15 }, // Zona del Partido de la U
+            number: { x: 0.15, y: 0.45, width: 0.15, height: 0.1 }  // Zona del número 104
+        };
+
+        function initializePage(pageNum) {
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+
+            svgImage.onload = function () {
+                setupCanvas(pageNum);
+                setupDrawing(pageNum);
+            };
+
+            // Si la imagen ya está cargada
+            if (svgImage.complete) {
+                setupCanvas(pageNum);
+                setupDrawing(pageNum);
+            }
         }
 
-        function initVoting() {
-            if (img.complete) setupSize();
-            else img.onload = setupSize;
+        function setupCanvas(pageNum) {
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+
+            const rect = svgImage.getBoundingClientRect();
+            drawCanvas.width = rect.width;
+            drawCanvas.height = rect.height;
+
+            // Posicionar canvas sobre la imagen
+            drawCanvas.style.position = 'absolute';
+            drawCanvas.style.left = rect.left - wrapper.getBoundingClientRect().left + wrapper.scrollLeft + 'px';
+            drawCanvas.style.top = rect.top - wrapper.getBoundingClientRect().top + wrapper.scrollTop + 'px';
         }
 
-        function setupSize() {
-            // Set canvas size to match image natural size
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
+        function setupDrawing(pageNum) {
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            const ctx = drawCanvas.getContext('2d');
 
-            // Start at 70% zoom
-            transform.scale = 0.7;
+            ctx.strokeStyle = '#FF6B35';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
-            // Center roughly
-            const vRect = view.getBoundingClientRect();
-            transform.x = (vRect.width - (img.naturalWidth * transform.scale)) / 2;
-            transform.y = 50; // Padding top
-
-            updateTransform();
-            setupTouch();
-        }
-
-        function updateTransform() {
-            container.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`;
-        }
-
-        function setupTouch() {
-            view.addEventListener('touchstart', onTouchStart, { passive: false });
-            view.addEventListener('touchmove', onTouchMove, { passive: false });
-            view.addEventListener('touchend', onTouchEnd, { passive: false });
-        }
-
-        function getCanvasCoords(touch) {
-            const rect = container.getBoundingClientRect();
-            const x = (touch.clientX - rect.left) / transform.scale;
-            const y = (touch.clientY - rect.top) / transform.scale;
-            return { x, y };
-        }
-
-        function onTouchStart(e) {
-            e.preventDefault();
-            const touches = e.touches;
-
-            if (touches.length === 1) {
-                // Drawing intent - Image is STATIC during drawing
-                const coords = getCanvasCoords(touches[0]);
-                touchData.isDrawing = true;
-                touchData.lastX = coords.x;
-                touchData.lastY = coords.y;
-
+            function startDrawing(e) {
+                e.preventDefault();
+                isDrawing = true;
+                currentPath = [];
+                const pos = getMousePos(wrapper, drawCanvas, e);
+                currentPath.push(pos);
                 ctx.beginPath();
-                ctx.moveTo(coords.x, coords.y);
-            } else if (touches.length === 2) {
-                // Navigation intent
-                touchData.isDrawing = false;
-                touchData.distance = Math.hypot(touches[1].clientX - touches[0].clientX, touches[1].clientY - touches[0].clientY);
-                touchData.centerX = (touches[0].clientX + touches[1].clientX) / 2;
-                touchData.centerY = (touches[0].clientY + touches[1].clientY) / 2;
+                ctx.moveTo(pos.x, pos.y);
             }
-        }
 
-        function onTouchMove(e) {
-            e.preventDefault();
-            const touches = e.touches;
+            function draw(e) {
+                if (!isDrawing) return;
+                e.preventDefault();
 
-            if (touches.length === 1 && touchData.isDrawing) {
-                // Drawing - No image transformation here
-                const coords = getCanvasCoords(touches[0]);
-                ctx.strokeStyle = 'black';
-                ctx.lineWidth = 1; // Thin black line as requested
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.lineTo(coords.x, coords.y);
+                const pos = getMousePos(wrapper, drawCanvas, e);
+                currentPath.push(pos);
+                ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
-            } else if (touches.length === 2) {
-                // Pan and Zoom
-                const newDist = Math.hypot(touches[1].clientX - touches[0].clientX, touches[1].clientY - touches[0].clientY);
-                const newCenterX = (touches[0].clientX + touches[1].clientX) / 2;
-                const newCenterY = (touches[0].clientY + touches[1].clientY) / 2;
+            }
 
-                const zoomFactor = newDist / touchData.distance;
-                const newScale = Math.min(Math.max(transform.scale * zoomFactor, 0.2), 4);
+            function stopDrawing() {
+                if (!isDrawing) return;
+                isDrawing = false;
 
-                // Adjust X and Y to keep zoom focused on midpoint
-                transform.x = newCenterX - (newCenterX - transform.x) * (newScale / transform.scale);
-                transform.y = newCenterY - (newCenterY - transform.y) * (newScale / transform.scale);
+                // Validar si la X está en la zona correcta
+                if (currentPath.length > 5) {
+                    const zone = pageNum === 2 ? 'party' : 'number';
+                    if (isXInValidZone(currentPath, drawCanvas, zone)) {
+                        setTimeout(() => {
+                            if (pageNum === 2) {
+                                goToPage(3);
+                            } else {
+                                goToPage(4);
+                            }
+                        }, 500);
+                    } else {
+                        showToast();
+                        setTimeout(() => {
+                            ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+                        }, 1000);
+                    }
+                }
+                currentPath = [];
+            }
 
-                // Pan based on midpoint move
-                transform.x += (newCenterX - touchData.centerX);
-                transform.y += (newCenterY - touchData.centerY);
+            // Mouse events
+            drawCanvas.addEventListener('mousedown', startDrawing);
+            drawCanvas.addEventListener('mousemove', draw);
+            drawCanvas.addEventListener('mouseup', stopDrawing);
+            drawCanvas.addEventListener('mouseleave', stopDrawing);
 
-                transform.scale = newScale;
-                touchData.distance = newDist;
-                touchData.centerX = newCenterX;
-                touchData.centerY = newCenterY;
+            // Touch events
+            drawCanvas.addEventListener('touchstart', (e) => {
+                startDrawing(e.touches[0]);
+            });
+            drawCanvas.addEventListener('touchmove', (e) => {
+                draw(e.touches[0]);
+            });
+            drawCanvas.addEventListener('touchend', stopDrawing);
+        }
 
-                updateTransform();
+        function getMousePos(wrapper, canvas, e) {
+            const rect = canvas.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function isXInValidZone(path, canvas, zone) {
+            if (path.length < 5) return false;
+
+            // Calcular el centro del trazo
+            let sumX = 0, sumY = 0;
+            path.forEach(p => {
+                sumX += p.x;
+                sumY += p.y;
+            });
+            const centerX = sumX / path.length;
+            const centerY = sumY / path.length;
+
+            // Convertir a coordenadas relativas
+            const relX = centerX / canvas.width;
+            const relY = centerY / canvas.height;
+
+            // Verificar si está en la zona válida
+            const validZone = validZones[zone];
+            return (
+                relX >= validZone.x &&
+                relX <= validZone.x + validZone.width &&
+                relY >= validZone.y &&
+                relY <= validZone.y + validZone.height
+            );
+        }
+
+        function zoomIn(pageNum) {
+            scales[pageNum] = Math.min(scales[pageNum] + 0.3, 4);
+            updateZoom(pageNum);
+        }
+
+        function zoomOut(pageNum) {
+            scales[pageNum] = Math.max(scales[pageNum] - 0.3, 0.5);
+            updateZoom(pageNum);
+        }
+
+        function updateZoom(pageNum) {
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const scale = scales[pageNum];
+            const zoomPercent = Math.round(scale * 70);
+
+            document.getElementById(`zoomLevel${pageNum}`).textContent = `${zoomPercent}%`;
+            svgImage.style.transform = `scale(${scale})`;
+
+            // Actualizar canvas después del zoom
+            setTimeout(() => setupCanvas(pageNum), 100);
+        }
+
+        function goToPage(pageNum) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page${pageNum}`).classList.add('active');
+            currentPage = pageNum;
+
+            if (pageNum === 2 || pageNum === 3) {
+                initializePage(pageNum);
             }
         }
 
-        function onTouchEnd() {
-            touchData.isDrawing = false;
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
 
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-
-        function resetAll() {
-            clearCanvas();
+        function restart() {
+            scales = { 2: 1, 3: 1 };
+            document.querySelectorAll('canvas').forEach(c => {
+                const ctx = c.getContext('2d');
+                ctx.clearRect(0, 0, c.width, c.height);
+            });
             goToPage(1);
         }
     </script>
