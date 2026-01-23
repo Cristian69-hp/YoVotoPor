@@ -4,16 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yo Voto por Henry Riano</title>
-    <!-- <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@700&display=swap" rel="stylesheet"> -->
+    <title>Yo Voto por Henry Riaño</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
     <style>
-        @font-face {
-            font-family: 'Archivo Condensed';
-            src: url('fonts/Archivo_Condensed-Bold.ttf') format('truetype');
-            font-weight: 700;
-            font-style: normal;
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -206,7 +199,7 @@
     <div class="container">
         <div class="header">
             <div class="badge">Santander +PRO</div>
-            <h1>Henry Riano</h1>
+            <h1>Henry Riaño</h1>
             <p class="subtitle">Crea tu imagen personalizada</p>
         </div>
 
@@ -258,13 +251,13 @@
             <div class="share-info">
                 <div class="share-content">
                     <h3>¡Comparte tu apoyo!</h3>
-                    <p>Publica estas imágenes en tus redes sociales con <strong>#HenryRiano</strong></p>
+                    <p>Publica estas imágenes en tus redes sociales con <strong>#HenryRiaño</strong></p>
                 </div>
             </div>
         </div>
 
         <div class="footer">
-            <p>Henry Riano · Santander +PRO</p>
+            <p>Henry Riaño · Santander +PRO</p>
         </div>
     </div>
 
@@ -332,19 +325,20 @@
 
             if (texto) {
                 let fontSize = 140;
-                ctx.font = `700 ${fontSize}px "Archivo Condensed", Arial, sans-serif`;
+                // Usar Bebas Neue que es similar al estilo de la imagen
+                ctx.font = `${fontSize}px "Bebas Neue", Impact, Arial Black, sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
 
                 let textWidth = ctx.measureText(texto).width;
                 while (textWidth > posicion.maxWidth && fontSize > 40) {
                     fontSize -= 2;
-                    ctx.font = `700 ${fontSize}px "Archivo Condensed", Arial, sans-serif`;
+                    ctx.font = `${fontSize}px "Bebas Neue", Impact, Arial Black, sans-serif`;
                     textWidth = ctx.measureText(texto).width;
                 }
 
-                // Color azul como en la imagen
-                ctx.fillStyle = '#124380';
+                // Color amarillo como en la imagen de referencia
+                ctx.fillStyle = '#FFC107';
                 ctx.fillText(texto, posicion.x, posicion.y);
             }
         }
