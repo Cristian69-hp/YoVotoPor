@@ -481,9 +481,18 @@
                 if (currentPath.length > 5) {
                     allPaths.push([...currentPath]); // Guardar el trazo actual
 
+                    const zone = pageNum === 2 ? 'party' : 'number';
+
+                    // Validar si la línea actual está en la zona correcta
+                    if (!isXInValidZone(currentPath, drawCanvas, zone)) {
+                        showToast('¡Error! Inténtalo de nuevo.', 'error');
+                        setTimeout(() => {
+                            ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+                            allPaths = []; // Limpiar todas las líneas guardadas
+                        }, 1000);
+                    }
                     // Validar solo si se han hecho al menos 2 trazos
-                    if (allPaths.length >= 2) {
-                        const zone = pageNum === 2 ? 'party' : 'number';
+                    else if (allPaths.length >= 2) {
                         const isValid = allPaths.every(path => isXInValidZone(path, drawCanvas, zone));
 
                         if (isValid) {
