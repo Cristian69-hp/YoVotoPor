@@ -148,39 +148,45 @@
         /* Header Instruction */
         .instruction-header {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 70%, transparent 100%);
-            color: white;
-            padding: 30px 20px 50px 20px;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 24px;
             z-index: 100;
             text-align: center;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .instruction-header .step-tag {
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
         }
 
         .instruction-header h2 {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 2.8rem;
-            margin-bottom: 12px;
-            text-shadow:
-                0 0 20px rgba(255, 107, 53, 0.8),
-                0 0 40px rgba(255, 107, 53, 0.5),
-                0 4px 15px rgba(0, 0, 0, 1);
-            letter-spacing: 2px;
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: var(--primary-orange);
+            line-height: 1;
+            letter-spacing: 1px;
         }
 
         .instruction-header p {
-            font-size: 1.4rem;
-            font-weight: 600;
-            text-shadow:
-                0 0 15px rgba(255, 255, 255, 0.8),
-                0 3px 10px rgba(0, 0, 0, 1);
-            background: rgba(255, 107, 53, 0.2);
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 10px;
-            border: 2px solid rgba(255, 107, 53, 0.4);
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .instruction-header p b {
+            color: var(--primary-orange);
+            font-weight: 700;
         }
 
         /* Zoom Controls */
