@@ -511,29 +511,8 @@
         }
 
         function isXInValidZone(path, canvas, zone) {
-            if (path.length < 5) return false;
-
-            // Calcular el centro del trazo
-            let sumX = 0, sumY = 0;
-            path.forEach(p => {
-                sumX += p.x;
-                sumY += p.y;
-            });
-            const centerX = sumX / path.length;
-            const centerY = sumY / path.length;
-
-            // Convertir a coordenadas relativas
-            const relX = centerX / canvas.width;
-            const relY = centerY / canvas.height;
-
-            // Verificar si está en la zona válida
-            const validZone = validZones[zone];
-            return (
-                relX >= validZone.x &&
-                relX <= validZone.x + validZone.width &&
-                relY >= validZone.y &&
-                relY <= validZone.y + validZone.height
-            );
+            // Aceptamos cualquier marca mientras sea dentro del área del tarjetón (el canvas)
+            return path.length >= 5;
         }
 
         function zoomIn(pageNum) {
