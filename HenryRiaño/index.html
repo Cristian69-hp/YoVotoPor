@@ -245,6 +245,85 @@
             font-size: 14px;
             letter-spacing: 1px;
         }
+
+        /* Overlay para escapar de Instagram (iOS) */
+        #instagram-escape-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .escape-content {
+            max-width: 320px;
+        }
+
+        .escape-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .escape-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .escape-text {
+            font-size: 16px;
+            color: #444;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .escape-instruction {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .escape-instruction p {
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 10px;
+        }
+
+        .escape-arrow {
+            position: absolute;
+            top: -40px;
+            right: 10px;
+            font-size: 40px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
     </style>
 </head>
 
@@ -349,7 +428,46 @@
         </div>
     </div>
 
+    <!-- Overlay para Instagram (iOS) -->
+    <div id="instagram-escape-overlay">
+        <div class="escape-content">
+            <div class="escape-arrow">↗️</div>
+            <img src="https://i.ibb.co/MxVYJdPz/henry-R.jpg" alt="Logo" class="escape-icon">
+            <h2 class="escape-title">¡Para descargar tu imagen falta un paso!</h2>
+            <p class="escape-text">Instagram no permite descargar archivos directamente. Por favor, abre esta página en
+                el navegador de tu celular.</p>
+
+            <div class="escape-instruction">
+                <p>Haz clic en los 3 puntos de arriba <strong>(...)</strong> o el icono de la brújula y selecciona:</p>
+                <div style="font-size: 18px; color: #0D47A1; font-weight: bold;">
+                    "Abrir en el navegador"
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- Lógica para escapar de Instagram ---
+        (function () {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const isInstagram = ua.indexOf('Instagram') > -1 || ua.indexOf('FBAN') > -1 || ua.indexOf('FBAV') > -1;
+            const isAndroid = /Android/i.test(ua);
+            const isIos = /iPhone|iPad|iPod/i.test(ua);
+
+            if (isInstagram) {
+                if (isAndroid) {
+                    // Forzar Chrome en Android
+                    const currentUrl = window.location.href.replace('https://', '').replace('http://', '');
+                    window.location.href = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+                } else if (isIos) {
+                    // Mostrar overlay de instrucciones en iOS
+                    window.addEventListener('DOMContentLoaded', () => {
+                        document.getElementById('instagram-escape-overlay').style.display = 'flex';
+                    });
+                }
+            }
+        })();
+
         const nombreInput = document.getElementById('nombre');
         const canvas1 = document.getElementById('canvas1');
         const canvas2 = document.getElementById('canvas2');
