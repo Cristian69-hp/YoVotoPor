@@ -380,127 +380,133 @@
 
     <script>
         let currentPage = 1;
-        let scales = { 2: 0.7, 3: 0.7 };
+        let scales = { 2: 0.7, 3: 0.7 }; // Escalas iniciales
         let isDrawing = false;
         let currentPath = [];
 
-        // 1. Cargamos el SVG de forma dinámica para poder "leer" sus piezas internas
-        async function loadSVG(pageNum) {
-            const container = document.getElementById(`svgWrapper${pageNum}`);
-            const response = await fetch('SVG/archivo.svg');
-            const svgText = await response.text();
-
-            // Insertamos el SVG directamente
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = svgText;
-            const svgElement = tempDiv.querySelector('svg');
-            svgElement.id = `svgImage${pageNum}`;
-
-            // Eliminamos el <img> viejo e insertamos el SVG real
-            const oldImg = document.getElementById(`svgImage${pageNum}`);
-            if (oldImg) oldImg.remove();
-            container.prepend(svgElement);
-
-            setupCanvas(pageNum);
-            setupDrawing(pageNum);
-        }
+        // Ajustes de zonas para archivo.svg (proporciones relativas)
+        const validZones = {
+            party: { x: 0.05, y: 0.35, width: 0.3, height: 0.15 }, // Zona Partido de la U (Aprox)
+            number: { x: 0.2, y: 0.4, width: 0.1, height: 0.08 }   // Zona Número 104 (Aprox)
+        };
 
         function initializePage(pageNum) {
-            loadSVG(pageNum);
-        }
-
-        function setupCanvas(pageNum) {
-            const svgElement = document.getElementById(`svgImage${pageNum}`);
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
             const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
             const wrapper = document.getElementById(`svgWrapper${pageNum}`);
 
-            if (!svgElement) return;
+            svgImage.onload = function () {
+                setupCanvas(pageNum);
+                setupDrawing(pageNum);
+            };
 
-            const rect = svgElement.getBoundingClientRect();
+            // Si la imagen ya está cargada
+            if (svgImage.complete) {
+                setupCanvas(pageNum);
+                setupDrawing(pageNum);
+                updateZoom(pageNum); // Apply initial 70% zoom
+            }
+        }
+
+        function setupCanvas(pageNum) {
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+
+            const rect = svgImage.getBoundingClientRect();
             drawCanvas.width = rect.width;
             drawCanvas.height = rect.height;
 
-            // Posicionamiento absoluto sobre el SVG
-            drawCanvas.style.left = (svgElement.offsetLeft) + 'px';
-            drawCanvas.style.top = (svgElement.offsetTop) + 'px';
+            // Posicionar canvas sobre la imagen
+            drawCanvas.style.position = 'absolute';
+            drawCanvas.style.left = rect.left - wrapper.getBoundingClientRect().left + wrapper.scrollLeft + 'px';
+            drawCanvas.style.top = rect.top - wrapper.getBoundingClientRect().top + wrapper.scrollTop + 'px';
         }
 
         function setupDrawing(pageNum) {
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
             const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
             const ctx = drawCanvas.getContext('2d');
 
-            ctx.strokeStyle = '#e11d48'; // Color rojo para que se vea como marcador real
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 1;
             ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
             function startDrawing(e) {
+                e.preventDefault();
                 isDrawing = true;
-                const pos = getMousePos(drawCanvas, e);
+                currentPath = [];
+                const pos = getMousePos(wrapper, drawCanvas, e);
+                currentPath.push(pos);
                 ctx.beginPath();
                 ctx.moveTo(pos.x, pos.y);
-                currentPath.push(pos);
             }
 
             function draw(e) {
                 if (!isDrawing) return;
-                const pos = getMousePos(drawCanvas, e);
+                e.preventDefault();
+
+                const pos = getMousePos(wrapper, drawCanvas, e);
+                currentPath.push(pos);
                 ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
-                currentPath.push(pos);
             }
 
-            function stopDrawing(e) {
+            function stopDrawing() {
                 if (!isDrawing) return;
                 isDrawing = false;
 
-                // VALIDACIÓN INTELIGENTE
-                if (currentPath.length > 5) {
-                    // Tomamos el punto medio del trazo para validar
-                    const midPoint = currentPath[Math.floor(currentPath.length / 2)];
-
-                    // Convertimos la posición del canvas a posición global de pantalla
-                    const canvasRect = drawCanvas.getBoundingClientRect();
-                    const screenX = canvasRect.left + midPoint.x;
-                    const screenY = canvasRect.top + midPoint.y;
-
-                    // ESTA ES LA MAGIA: Detecta qué elemento del SVG está bajo el trazo
-                    // Ocultamos el canvas un milisegundo para "ver" a través de él
-                    drawCanvas.style.pointerEvents = 'none';
-                    const elementUnder = document.elementFromPoint(screenX, screenY);
-                    drawCanvas.style.pointerEvents = 'auto';
-
-                    // Verificamos si el elemento tocado es el correcto (usando texto o IDs del SVG)
-                    const content = elementUnder ? elementUnder.textContent + elementUnder.id : "";
-
-                    let isValid = false;
-                    if (pageNum === 2 && (content.includes('U') || content.includes('partido'))) isValid = true;
-                    if (pageNum === 3 && (content.includes('104'))) isValid = true;
-
-                    if (isValid) {
-                        setTimeout(() => goToPage(pageNum + 1), 600);
+                // Validar automáticamente al soltar
+                if (currentPath.length > 3) {
+                    const zoneKey = pageNum === 2 ? 'party' : 'number';
+                    if (isXInValidZone(currentPath, drawCanvas, zoneKey)) {
+                        setTimeout(() => {
+                            if (pageNum === 2) goToPage(3);
+                            else goToPage(4);
+                        }, 500);
                     } else {
                         showToast();
-                        ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+                        setTimeout(() => {
+                            ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+                        }, 800);
                     }
                 }
                 currentPath = [];
             }
 
-            // Eventos (Mouse y Touch)
-            drawCanvas.onmousedown = startDrawing;
-            drawCanvas.onmousemove = draw;
-            drawCanvas.onmouseup = stopDrawing;
+            // Mouse events
+            drawCanvas.addEventListener('mousedown', startDrawing);
+            drawCanvas.addEventListener('mousemove', draw);
+            drawCanvas.addEventListener('mouseup', stopDrawing);
+            drawCanvas.addEventListener('mouseleave', stopDrawing);
 
-            drawCanvas.ontouchstart = (e) => startDrawing(e.touches[0]);
-            drawCanvas.ontouchmove = (e) => { e.preventDefault(); draw(e.touches[0]); };
-            drawCanvas.ontouchend = stopDrawing;
+            // Touch events - ONLY drawing if 1 finger
+            drawCanvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    startDrawing(e.touches[0]);
+                }
+            });
+            drawCanvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1) {
+                    draw(e.touches[0]);
+                }
+            });
+            drawCanvas.addEventListener('touchend', (e) => {
+                stopDrawing();
+            });
         }
 
-        function getMousePos(canvas, e) {
+        function getMousePos(wrapper, canvas, e) {
             const rect = canvas.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
             return {
-                x: (e.clientX - rect.left),
-                y: (e.clientY - rect.top)
+                x: clientX - rect.left,
+                y: clientY - rect.top
             };
         }
 
