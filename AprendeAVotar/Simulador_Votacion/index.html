@@ -231,26 +231,7 @@
             box-shadow: 0 20px 40px rgba(34, 197, 94, 0.3);
         }
 
-        /* Toast */
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: #ef4444;
-            color: white;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: 600;
-            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 2000;
-            white-space: nowrap;
-        }
-
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
+        /* Animations Removed Toast */
 
         /* Animations */
         @keyframes fadeInDown {
@@ -375,8 +356,7 @@
         <button class="btn" onclick="restart()">VOLVER A PRACTICAR</button>
     </div>
 
-    <!-- Error Toast -->
-    <div id="toast" class="toast">¡Marca en el lugar correcto! Inténtalo de nuevo.</div>
+    <!-- Success Circle (Removed floating toast) -->
 
     <script>
         let currentPage = 1;
@@ -384,10 +364,10 @@
         let isDrawing = false;
         let currentPath = [];
 
-        // Ajustes de zonas para archivo.svg (proporciones relativas)
+        // Coordenadas de las zonas válidas (ajustar según el SVG real)
         const validZones = {
-            party: { x: 0.05, y: 0.35, width: 0.3, height: 0.15 }, // Zona Partido de la U (Aprox)
-            number: { x: 0.2, y: 0.4, width: 0.1, height: 0.08 }   // Zona Número 104 (Aprox)
+            party: { x: 0.15, y: 0.25, width: 0.2, height: 0.15 }, // Zona del Partido de la U
+            number: { x: 0.15, y: 0.45, width: 0.15, height: 0.1 }  // Zona del número 104
         };
 
         function initializePage(pageNum) {
@@ -457,19 +437,22 @@
                 if (!isDrawing) return;
                 isDrawing = false;
 
-                // Validar automáticamente al soltar
-                if (currentPath.length > 3) {
-                    const zoneKey = pageNum === 2 ? 'party' : 'number';
-                    if (isXInValidZone(currentPath, drawCanvas, zoneKey)) {
+                // Validar si la X está en la zona correcta
+                if (currentPath.length > 5) {
+                    const zone = pageNum === 2 ? 'party' : 'number';
+                    if (isXInValidZone(currentPath, drawCanvas, zone)) {
                         setTimeout(() => {
-                            if (pageNum === 2) goToPage(3);
-                            else goToPage(4);
+                            if (pageNum === 2) {
+                                goToPage(3);
+                            } else {
+                                goToPage(4);
+                            }
                         }, 500);
                     } else {
                         showToast();
                         setTimeout(() => {
                             ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-                        }, 800);
+                        }, 1000);
                     }
                 }
                 currentPath = [];
@@ -565,16 +548,9 @@
 
             if (pageNum === 2 || pageNum === 3) {
                 initializePage(pageNum);
+                // Force update zoom after page change
                 setTimeout(() => updateZoom(pageNum), 50);
             }
-        }
-
-        function showToast() {
-            const toast = document.getElementById('toast');
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2500);
         }
 
         function restart() {
