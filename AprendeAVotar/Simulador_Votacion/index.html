@@ -399,9 +399,12 @@
         let lastErrorTime = 0;
         let touchIdentifier = null;
 
+        // AJUSTA ESTAS COORDENADAS SEGÚN TU SVG
+        // x e y son la posición inicial (de 0 a 1 = porcentaje)
+        // width y height son el tamaño de la zona (de 0 a 1 = porcentaje)
         const validZones = {
-            party: { x: 0.05, y: 0.38, width: 0.15, height: 0.12 },
-            number: { x: 0.17, y: 0.42, width: 0.13, height: 0.08 }
+            party: { x: 0.02, y: 0.05, width: 0.25, height: 0.20 },  // Zona más grande para el partido
+            number: { x: 0.15, y: 0.35, width: 0.20, height: 0.15 }   // Zona para el número 104
         };
 
         function initializePage(pageNum) {
@@ -439,7 +442,7 @@
             const ctx = drawCanvas.getContext('2d');
 
             ctx.strokeStyle = 'black';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
@@ -502,12 +505,18 @@
                 const zoneKey = pageNum === 2 ? 'party' : 'number';
                 const validZone = validZones[zoneKey];
 
+                // Mostrar en consola para debugging
+                console.log(`Dibujando en: X=${(relX * 100).toFixed(1)}%, Y=${(relY * 100).toFixed(1)}%`);
+                console.log(`Zona válida: X=${(validZone.x * 100).toFixed(1)}%-${((validZone.x + validZone.width) * 100).toFixed(1)}%, Y=${(validZone.y * 100).toFixed(1)}%-${((validZone.y + validZone.height) * 100).toFixed(1)}%`);
+
                 const isInZone = (
                     relX >= validZone.x &&
                     relX <= validZone.x + validZone.width &&
                     relY >= validZone.y &&
                     relY <= validZone.y + validZone.height
                 );
+
+                console.log(`¿En zona válida? ${isInZone}`);
 
                 if (!isInZone && isValidDrawing) {
                     isValidDrawing = false;
