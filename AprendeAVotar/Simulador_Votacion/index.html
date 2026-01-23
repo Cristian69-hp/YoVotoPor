@@ -5,19 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aprende a Votar - Raúl Machado</title>
-    <!-- Google Fonts: Inter for UI and Bebas Neue for impact headings -->
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;800&display=swap"
         rel="stylesheet">
     <style>
         :root {
             --primary-orange: #FF6B35;
             --primary-dark: #cc562a;
-            --primary-light: #FF8C42;
             --bg-color: #0f172a;
             --paper-color: #ffffff;
             --text-main: #1e293b;
             --text-muted: #64748b;
-            --transition-speed: 0.8s;
         }
 
         * {
@@ -30,90 +27,35 @@
             font-family: 'Inter', sans-serif;
             background: var(--paper-color);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
-            perspective: 2000px;
         }
 
-        /* Notebook Container */
-        .notebook {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-            transform-style: preserve-3d;
-            background: var(--paper-color);
-        }
-
-        /* Individual Pages */
+        /* Pages */
         .page {
             position: absolute;
             width: 100%;
             height: 100%;
             top: 0;
             left: 0;
-            background: var(--paper-color);
-            transform-origin: left center;
-            transition: transform var(--transition-speed) cubic-bezier(0.645, 0.045, 0.355, 1);
-            transform-style: preserve-3d;
-            z-index: 1;
-            overflow: hidden;
-            display: flex;
+            display: none;
             flex-direction: column;
-            pointer-events: none;
-            opacity: 0;
-        }
-
-        /* Spine detail */
-        .page::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 30px;
-            background: linear-gradient(to right, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
-            z-index: 10;
         }
 
         .page.active {
-            z-index: 5;
-            pointer-events: all;
-            opacity: 1;
-            transform: rotateY(0deg);
-        }
-
-        .page.flipped {
-            transform: rotateY(-180deg);
-            z-index: 1;
-            pointer-events: none;
-            opacity: 0;
-        }
-
-        /* Page Content Padding */
-        .page-content {
-            padding: 40px 20px;
-            flex: 1;
             display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
         }
 
-        /* Screen 1: Welcome */
+        /* Welcome Page */
         #page1 {
-            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://i.ibb.co/fVHzMmSC/Raul-Machado-IMG.jpg') center/cover no-repeat;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+                url('https://i.ibb.co/fVHzMmSC/Raul-Machado-IMG.jpg') center/cover no-repeat;
             color: white;
             justify-content: center;
             align-items: center;
             text-align: center;
         }
 
-        #page1 .welcome-card {
+        .welcome-card {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(15px);
             padding: 40px;
@@ -123,40 +65,19 @@
             animation: fadeInDown 1s ease-out;
         }
 
-        /* Heading Styles */
         h1 {
             font-family: 'Bebas Neue', sans-serif;
             font-size: 5rem;
             margin-bottom: 20px;
             letter-spacing: 4px;
             line-height: 0.9;
-            background: linear-gradient(to bottom, #ffffff, #ffaa80);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
-        h2 {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 3.5rem;
-            color: var(--primary-orange);
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-        }
-
-        .subtitle {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            margin-bottom: 40px;
-        }
-
-        /* Buttons */
         .btn {
             display: inline-block;
             padding: 20px 60px;
             background: var(--primary-orange);
             color: white;
-            text-decoration: none;
             font-family: 'Bebas Neue', sans-serif;
             font-size: 2rem;
             border-radius: 50px;
@@ -173,11 +94,6 @@
             box-shadow: 0 15px 40px rgba(255, 107, 53, 0.6);
         }
 
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        /* Step Indicators */
         .step-tag {
             background: rgba(255, 107, 53, 0.1);
             color: var(--primary-orange);
@@ -187,106 +103,116 @@
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-bottom: 20px;
             display: inline-block;
         }
 
-        /* Grid for Options */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
+        /* SVG Voting Container */
+        .svg-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #f5f5f5;
         }
 
-        .card {
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 20px;
-            padding: 25px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+        .svg-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            cursor: crosshair;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 200px;
         }
 
-        .card:hover {
-            border-color: var(--primary-orange);
-            background: white;
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
-        }
-
-        .card.selected {
-            border-color: var(--primary-orange);
-            background: #fff7ed;
-            box-shadow: inset 0 0 0 4px var(--primary-orange);
-        }
-
-        .card.correct.selected {
-            background: #fff7ed;
-        }
-
-        .card .logo {
-            width: 100px;
-            height: 100px;
-            object-fit: contain;
-            margin-bottom: 15px;
+        #svgImage {
+            display: block;
             transition: transform 0.3s ease;
+            max-width: none;
         }
 
-        .card:hover .logo {
+        #drawCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* Header Instruction */
+        .instruction-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+            color: white;
+            padding: 20px;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .instruction-header h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .instruction-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .zoom-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            background: var(--primary-orange);
+            color: white;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .zoom-btn:hover {
+            background: var(--primary-dark);
             transform: scale(1.1);
         }
 
-        .card .name {
-            font-weight: 800;
-            font-size: 1rem;
+        .zoom-level {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
             color: var(--text-main);
-            text-transform: uppercase;
-        }
-
-        .card .number {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 5rem;
-            color: var(--primary-orange);
-            line-height: 1;
-        }
-
-        /* X Mark Overlay */
-        .x-mark {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            pointer-events: none;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 5;
-        }
-
-        .card.selected .x-mark {
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        .x-mark svg {
-            width: 120px;
-            height: 120px;
-            stroke: var(--primary-orange);
-            stroke-width: 15;
-            filter: drop-shadow(0 5px 15px rgba(255, 107, 53, 0.4));
+            min-width: 60px;
         }
 
         /* Success Page */
         #page4 {
             background: white;
-            text-align: center;
             justify-content: center;
             align-items: center;
+            text-align: center;
+            padding: 40px;
         }
 
         .success-icon {
@@ -297,23 +223,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 30px;
+            margin: 0 auto 30px;
             color: white;
             font-size: 5rem;
             animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 20px 40px rgba(34, 197, 94, 0.3);
         }
 
-        .confetti-box {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        /* Error Message */
+        /* Toast */
         .toast {
             position: fixed;
             bottom: 40px;
@@ -356,228 +273,292 @@
             }
         }
 
-        /* Responsive */
+        /* Mobile Responsive */
         @media (max-width: 768px) {
             h1 {
                 font-size: 3rem;
             }
 
-            h2 {
-                font-size: 2.2rem;
+            .instruction-header h2 {
+                font-size: 1.5rem;
             }
 
-            .grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
+            .instruction-header p {
+                font-size: 0.9rem;
             }
 
-            .card {
-                padding: 15px;
-                min-height: 150px;
+            .zoom-controls {
+                bottom: 10px;
+                right: 10px;
             }
 
-            .card .logo {
-                width: 60px;
-                height: 60px;
-            }
-
-            .card .number {
-                font-size: 3rem;
-            }
-
-            .x-mark svg {
-                width: 80px;
-                height: 80px;
-            }
-
-            .page-content {
-                padding: 30px 20px;
+            .zoom-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="notebook">
-        <!-- PAGE 1: Welcome -->
-        <div class="page active" id="page1">
-            <div class="page-content">
-                <div
-                    style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                    <div class="welcome-card">
-                        <div class="step-tag" style="background: rgba(255,255,255,0.2); color: white;">Simulador
-                            Electoral</div>
-                        <h1>RAÚL MACHADO</h1>
-                        <p style="font-size: 1.5rem; margin-bottom: 30px; opacity: 0.9;">¿Quieres aprender a votar por
-                            Raúl Machado?</p>
-                        <button class="btn" onclick="goToPage(2)">INICIAR A VOTAR</button>
-                    </div>
-                </div>
-            </div>
+    <!-- PAGE 1: Welcome -->
+    <div class="page active" id="page1">
+        <div class="welcome-card">
+            <div class="step-tag" style="background: rgba(255,255,255,0.2); color: white;">Simulador Electoral</div>
+            <h1>RAÚL MACHADO</h1>
+            <p style="font-size: 1.5rem; margin-bottom: 30px; opacity: 0.9;">¿Quieres aprender a votar por Raúl Machado?
+            </p>
+            <button class="btn" onclick="goToPage(2)">INICIAR A VOTAR</button>
+        </div>
+    </div>
+
+    <!-- PAGE 2: Party Selection (SVG) -->
+    <div class="page" id="page2">
+        <div class="instruction-header">
+            <div class="step-tag" style="background: white; color: var(--primary-orange);">Paso 01</div>
+            <h2>MARCA EL PARTIDO DE LA U</h2>
+            <p>Dibuja una <b>X</b> sobre el logo del Partido de la U en el tarjetón</p>
         </div>
 
-        <!-- PAGE 2: Party Selection -->
-        <div class="page" id="page2">
-            <div class="page-content">
-                <div class="step-tag">Paso 01</div>
-                <h2>SELECCIONA EL PARTIDO</h2>
-                <p class="subtitle">Busca y marca con una [X] el logo del <b>Partido de la U</b></p>
-
-                <div class="grid">
-                    <div class="card" onclick="handleCardClick(this, 'party', false)">
-                        <img src="Raul_Machado/images/AhoraColombia.jpg" alt="Ahora Colombia" class="logo">
-                        <span class="name">Ahora Colombia</span>
-                        <div class="x-mark"><svg viewBox="0 0 100 100">
-                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
-                            </svg></div>
-                    </div>
-                    <div class="card" onclick="handleCardClick(this, 'party', true)">
-                        <img src="Raul_Machado/images/DelaU.png" alt="Partido de la U" class="logo">
-                        <span class="name">Partido de la U</span>
-                        <div class="x-mark"><svg viewBox="0 0 100 100">
-                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
-                            </svg></div>
-                    </div>
-                    <div class="card" onclick="handleCardClick(this, 'party', false)">
-                        <img src="Raul_Machado/images/FrenteAmplioUnitario.jpg" alt="Frente Amplio Unitario"
-                            class="logo">
-                        <span class="name">Frente Amplio Unitario</span>
-                        <div class="x-mark"><svg viewBox="0 0 100 100">
-                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
-                            </svg></div>
-                    </div>
-                    <div class="card" onclick="handleCardClick(this, 'party', false)">
-                        <img src="Raul_Machado/images/PartidoLiberal.png" alt="Partido Liberal" class="logo">
-                        <span class="name">Partido Liberal</span>
-                        <div class="x-mark"><svg viewBox="0 0 100 100">
-                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
-                            </svg></div>
-                    </div>
-                    <div class="card" onclick="handleCardClick(this, 'party', false)">
-                        <img src="Raul_Machado/images/CoalicionCesar.png" alt="Coalición Cesar" class="logo">
-                        <span class="name">Coalición Cesar</span>
-                        <div class="x-mark"><svg viewBox="0 0 100 100">
-                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
-                            </svg></div>
-                    </div>
-                    <div class="card" onclick="handleCardClick(this, 'party', false)">
-                        <img src="Raul_Machado/images/conservador.jpg" alt="Conservador" class="logo">
-                        <span class="name">Partido Conservador</span>
-                        <div class="x-mark"><svg viewBox="0 0 100 100">
-                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
-                            </svg></div>
-                    </div>
-                </div>
+        <div class="svg-container">
+            <div class="svg-wrapper" id="svgWrapper2">
+                <img id="svgImage2" src="SVG/archivo.svg" alt="Tarjetón Electoral">
+                <canvas id="drawCanvas2"></canvas>
             </div>
-        </div>
-
-        <!-- PAGE 3: Candidate Selection -->
-        <div class="page" id="page3">
-            <div class="page-content">
-                <div class="step-tag">Paso 02</div>
-                <h2>SELECCIONA EL NÚMERO</h2>
-                <p class="subtitle">Marca con una [X] el número de Raúl Machado: <b>104</b></p>
-
-                <div class="grid">
-                    <div class="card" onclick="handleCardClick(this, 'candidate', false)">
-                        <div class="number">101</div>
-                        <span class="name">Candidato 1</span>
-                        <div class="x-mark"><svg viewBox="0 0 100 100">
-                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
-                            </svg></div>
-                    </div>
-                    <div class="card" onclick="handleCardClick(this, 'candidate', false)">
-                        <div class="number">102</div>
-                        <span class="name">Candidato 2</span>
-                        <div class="x-mark"><svg viewBox="0 0 100 100">
-                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
-                            </svg></div>
-                    </div>
-                    <div class="card" onclick="handleCardClick(this, 'candidate', false)">
-                        <div class="number">103</div>
-                        <span class="name">Candidato 3</span>
-                        <div class="x-mark"><svg viewBox="0 0 100 100">
-                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
-                            </svg></div>
-                    </div>
-                    <div class="card" onclick="handleCardClick(this, 'candidate', true)">
-                        <div class="number">104</div>
-                        <span class="name">Raúl Machado</span>
-                        <div class="x-mark"><svg viewBox="0 0 100 100">
-                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
-                            </svg></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- PAGE 4: Success -->
-        <div class="page" id="page4">
-            <div class="page-content">
-                <div class="success-icon">✓</div>
-                <h1 class="success-text-gradient">¡PROCESO EXITOSO!</h1>
-                <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; max-width: 500px;">Has
-                    aprendido correctamente cómo votar por <b>Raúl Machado</b>. ¡Gracias por participar!</p>
-
-                <div
-                    style="background: #fff7ed; padding: 30px; border-radius: 20px; border: 2px dashed var(--primary-orange); margin-bottom: 40px;">
-                    <p style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--primary-orange);">
-                        104 - PARTIDO DE LA U</p>
-                </div>
-
-                <button class="btn" onclick="restart()">VOLVER A PRACTICAR</button>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomOut(2)">-</button>
+                <div class="zoom-level" id="zoomLevel2">100%</div>
+                <button class="zoom-btn" onclick="zoomIn(2)">+</button>
             </div>
         </div>
     </div>
 
+    <!-- PAGE 3: Number Selection (SVG with Zoom) -->
+    <div class="page" id="page3">
+        <div class="instruction-header">
+            <div class="step-tag" style="background: white; color: var(--primary-orange);">Paso 02</div>
+            <h2>MARCA EL NÚMERO 104</h2>
+            <p>Haz <b>zoom</b> y dibuja una <b>X</b> sobre el número 104 de Raúl Machado</p>
+        </div>
+
+        <div class="svg-container">
+            <div class="svg-wrapper" id="svgWrapper3">
+                <img id="svgImage3" src="SVG/archivo.svg" alt="Tarjetón Electoral">
+                <canvas id="drawCanvas3"></canvas>
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomOut(3)">-</button>
+                <div class="zoom-level" id="zoomLevel3">100%</div>
+                <button class="zoom-btn" onclick="zoomIn(3)">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 4: Success -->
+    <div class="page" id="page4">
+        <div class="success-icon">✓</div>
+        <h1 style="color: var(--primary-orange);">¡PROCESO EXITOSO!</h1>
+        <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; max-width: 500px;">
+            Has aprendido correctamente cómo votar por <b>Raúl Machado</b>. ¡Gracias por participar!
+        </p>
+
+        <div
+            style="background: #fff7ed; padding: 30px; border-radius: 20px; border: 2px dashed var(--primary-orange); margin-bottom: 40px;">
+            <p style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--primary-orange);">
+                104 - PARTIDO DE LA U
+            </p>
+        </div>
+
+        <button class="btn" onclick="restart()">VOLVER A PRACTICAR</button>
+    </div>
+
     <!-- Error Toast -->
-    <div id="toast" class="toast">¡Selección Incorrecta! Inténtalo de nuevo.</div>
+    <div id="toast" class="toast">¡Marca en el lugar correcto! Inténtalo de nuevo.</div>
 
     <script>
         let currentPage = 1;
+        let scales = { 2: 1, 3: 1 }; // Escalas iniciales
+        let isDrawing = false;
+        let currentPath = [];
 
-        function goToPage(pageNumber) {
-            const current = document.getElementById(`page${currentPage}`);
-            const next = document.getElementById(`page${pageNumber}`);
+        // Coordenadas de las zonas válidas (ajustar según el SVG real)
+        const validZones = {
+            party: { x: 0.15, y: 0.25, width: 0.2, height: 0.15 }, // Zona del Partido de la U
+            number: { x: 0.15, y: 0.45, width: 0.15, height: 0.1 }  // Zona del número 104
+        };
 
-            if (pageNumber > currentPage) {
-                // Flip effect
-                current.classList.add('flipped');
-                current.classList.remove('active');
-                next.classList.add('active');
-            } else {
-                // Back effect
-                const pages = document.querySelectorAll('.page');
-                pages.forEach((p, idx) => {
-                    if (idx + 1 >= pageNumber) {
-                        p.classList.remove('flipped');
-                    }
-                });
-                currentPage = pageNumber;
-                current.classList.remove('active');
-                next.classList.add('active');
+        function initializePage(pageNum) {
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+
+            svgImage.onload = function () {
+                setupCanvas(pageNum);
+                setupDrawing(pageNum);
+            };
+
+            // Si la imagen ya está cargada
+            if (svgImage.complete) {
+                setupCanvas(pageNum);
+                setupDrawing(pageNum);
             }
-            currentPage = pageNumber;
         }
 
-        function handleCardClick(card, type, isCorrect) {
-            // Remove selection from others in same group
-            const container = card.parentElement;
-            container.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+        function setupCanvas(pageNum) {
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
 
-            // Add selection
-            card.classList.add('selected');
+            const rect = svgImage.getBoundingClientRect();
+            drawCanvas.width = rect.width;
+            drawCanvas.height = rect.height;
 
-            if (isCorrect) {
-                setTimeout(() => {
-                    if (type === 'party') goToPage(3);
-                    else goToPage(4);
-                }, 1000);
-            } else {
-                showToast();
-                setTimeout(() => {
-                    card.classList.remove('selected');
-                }, 1500);
+            // Posicionar canvas sobre la imagen
+            drawCanvas.style.position = 'absolute';
+            drawCanvas.style.left = rect.left - wrapper.getBoundingClientRect().left + wrapper.scrollLeft + 'px';
+            drawCanvas.style.top = rect.top - wrapper.getBoundingClientRect().top + wrapper.scrollTop + 'px';
+        }
+
+        function setupDrawing(pageNum) {
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            const ctx = drawCanvas.getContext('2d');
+
+            ctx.strokeStyle = '#FF6B35';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            function startDrawing(e) {
+                e.preventDefault();
+                isDrawing = true;
+                currentPath = [];
+                const pos = getMousePos(wrapper, drawCanvas, e);
+                currentPath.push(pos);
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+                e.preventDefault();
+
+                const pos = getMousePos(wrapper, drawCanvas, e);
+                currentPath.push(pos);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            }
+
+            function stopDrawing() {
+                if (!isDrawing) return;
+                isDrawing = false;
+
+                // Validar si la X está en la zona correcta
+                if (currentPath.length > 5) {
+                    const zone = pageNum === 2 ? 'party' : 'number';
+                    if (isXInValidZone(currentPath, drawCanvas, zone)) {
+                        setTimeout(() => {
+                            if (pageNum === 2) {
+                                goToPage(3);
+                            } else {
+                                goToPage(4);
+                            }
+                        }, 500);
+                    } else {
+                        showToast();
+                        setTimeout(() => {
+                            ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+                        }, 1000);
+                    }
+                }
+                currentPath = [];
+            }
+
+            // Mouse events
+            drawCanvas.addEventListener('mousedown', startDrawing);
+            drawCanvas.addEventListener('mousemove', draw);
+            drawCanvas.addEventListener('mouseup', stopDrawing);
+            drawCanvas.addEventListener('mouseleave', stopDrawing);
+
+            // Touch events
+            drawCanvas.addEventListener('touchstart', (e) => {
+                startDrawing(e.touches[0]);
+            });
+            drawCanvas.addEventListener('touchmove', (e) => {
+                draw(e.touches[0]);
+            });
+            drawCanvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function getMousePos(wrapper, canvas, e) {
+            const rect = canvas.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function isXInValidZone(path, canvas, zone) {
+            if (path.length < 5) return false;
+
+            // Calcular el centro del trazo
+            let sumX = 0, sumY = 0;
+            path.forEach(p => {
+                sumX += p.x;
+                sumY += p.y;
+            });
+            const centerX = sumX / path.length;
+            const centerY = sumY / path.length;
+
+            // Convertir a coordenadas relativas
+            const relX = centerX / canvas.width;
+            const relY = centerY / canvas.height;
+
+            // Verificar si está en la zona válida
+            const validZone = validZones[zone];
+            return (
+                relX >= validZone.x &&
+                relX <= validZone.x + validZone.width &&
+                relY >= validZone.y &&
+                relY <= validZone.y + validZone.height
+            );
+        }
+
+        function zoomIn(pageNum) {
+            scales[pageNum] = Math.min(scales[pageNum] + 0.3, 4);
+            updateZoom(pageNum);
+        }
+
+        function zoomOut(pageNum) {
+            scales[pageNum] = Math.max(scales[pageNum] - 0.3, 0.5);
+            updateZoom(pageNum);
+        }
+
+        function updateZoom(pageNum) {
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const scale = scales[pageNum];
+            const zoomPercent = Math.round(scale * 100);
+
+            document.getElementById(`zoomLevel${pageNum}`).textContent = `${zoomPercent}%`;
+            svgImage.style.transform = `scale(${scale})`;
+
+            // Actualizar canvas después del zoom
+            setTimeout(() => setupCanvas(pageNum), 100);
+        }
+
+        function goToPage(pageNum) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page${pageNum}`).classList.add('active');
+            currentPage = pageNum;
+
+            if (pageNum === 2 || pageNum === 3) {
+                initializePage(pageNum);
             }
         }
 
@@ -590,18 +571,12 @@
         }
 
         function restart() {
-            // Reset all pages
-            const pages = document.querySelectorAll('.page');
-            pages.forEach(p => {
-                p.classList.remove('flipped', 'active');
+            scales = { 2: 1, 3: 1 };
+            document.querySelectorAll('canvas').forEach(c => {
+                const ctx = c.getContext('2d');
+                ctx.clearRect(0, 0, c.width, c.height);
             });
-
-            // Reset cards
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
-
-            // Back to first
-            currentPage = 1;
-            document.getElementById('page1').classList.add('active');
+            goToPage(1);
         }
     </script>
 </body>
