@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+        {
+            "source": "/Aprende-a-votar-raul-machado",
+            "destination": "/RaulMachado/index.html"
+        }
+    ]
+}

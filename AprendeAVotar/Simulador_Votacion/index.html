@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprende a Votar - Raúl Machado</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            perspective: 1000px;
+        }
+
+        .screen {
+            display: none;
+            position: relative;
+            border-radius: 25px;
+            padding: 50px 40px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+
+        .screen.active {
+            display: block;
+            animation: slideInRight 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .screen.exit {
+            animation: slideOutLeft 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%) rotateY(-30deg);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0) rotateY(0);
+            }
+        }
+
+        @keyframes slideOutLeft {
+            from {
+                opacity: 1;
+                transform: translateX(0) rotateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(-100%) rotateY(30deg);
+            }
+        }
+
+        /* Pantalla de Inicio */
+        #screen1 {
+            background: url('https://i.ibb.co/fVHzMmSC/Raul-Machado-IMG.jpg') center/cover no-repeat;
+            background-size: cover;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #screen1 .content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .title-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 15px 40px;
+            border-radius: 50px;
+            margin-bottom: 30px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5em;
+            letter-spacing: 3px;
+            color: white;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 5em;
+            color: white;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+            animation: scaleIn 0.8s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .intro-box {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px 40px;
+            margin: 30px auto;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .intro-box h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2em;
+            color: #FF6B35;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .intro-box p {
+            font-size: 1.1em;
+            color: #333;
+            line-height: 1.8;
+        }
+
+        /* Pantallas internas */
+        .screen:not(#screen1) {
+            background: white;
+        }
+
+        h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3em;
+            color: #FF6B35;
+            text-align: center;
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #666;
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.8s ease-out 0.2s backwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            max-width: 350px;
+            margin: 0 auto;
+            padding: 20px 50px;
+            background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8em;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.6);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+            animation: fadeIn 1s ease-out 0.4s backwards;
+        }
+
+        .option-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 4px solid #dee2e6;
+            border-radius: 20px;
+            padding: 35px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 107, 53, 0.1) 0%, transparent 70%);
+            transform: scale(0);
+            transition: transform 0.6s;
+        }
+
+        .option-card:hover::before {
+            transform: scale(1);
+        }
+
+        .option-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            border-color: #FF6B35;
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.3);
+        }
+
+        .option-card.selected {
+            background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+            color: white;
+            border-color: #FF6B35;
+            animation: pulse 0.6s;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .option-card .x-mark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+            font-size: 100px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.3);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .option-card.selected .x-mark {
+            transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        }
+
+        .option-card .party-logo {
+            height: 100px;
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+            margin-bottom: 15px;
+            transition: transform 0.3s;
+        }
+
+        .option-card:hover .party-logo {
+            transform: scale(1.1);
+        }
+
+        .option-card .party-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3em;
+            letter-spacing: 1px;
+            line-height: 1.1;
+        }
+
+        .option-card .number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 4em;
+            color: #FF6B35;
+            margin-bottom: 10px;
+        }
+
+        .option-card.selected .number {
+            color: white;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #ff5252 0%, #f44336 100%);
+            border: 3px solid #d32f2f;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+            display: none;
+            animation: shake 0.6s, fadeIn 0.3s;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-10px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(10px);
+            }
+        }
+
+        .success-screen {
+            text-align: center;
+            background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+            color: white;
+        }
+
+        .success-icon {
+            font-size: 120px;
+            margin-bottom: 30px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-40px);
+            }
+
+            60% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .success-screen h1 {
+            color: white;
+            text-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .success-screen h2 {
+            color: white;
+        }
+
+        .step-indicator {
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            font-size: 1.2em;
+            color: #999;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .candidate-info {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 25px;
+            border-radius: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .candidate-info h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3em;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .candidate-info p {
+            font-size: 1.3em;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3.5em;
+            }
+
+            h2 {
+                font-size: 2.2em;
+            }
+
+            .options-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Pantalla 1: Inicio -->
+        <div class="screen active" id="screen1">
+            <div class="content">
+                <div class="title-badge">🗳️ TUTORIAL DE VOTACIÓN</div>
+                <h1>RAÚL MACHADO</h1>
+
+                <div class="intro-box">
+                    <h3>¿Listo para votar?</h3>
+                    <p>Te enseñaremos de forma fácil y rápida cómo marcar tu voto correctamente el día de las
+                        elecciones.</p>
+                </div>
+
+                <button class="btn" onclick="nextScreen(2)">
+                    <span style="position: relative;">COMENZAR</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla 2: Elegir Partido -->
+        <div class="screen" id="screen2">
+            <div class="step-indicator">PASO 1 DE 2</div>
+            <h2>ELIGE EL PARTIDO</h2>
+            <p class="subtitle">Marca con una X el logo del <strong>Partido de la U</strong></p>
+
+            <div class="options-grid">
+                <div class="option-card" onclick="selectParty(this, false)">
+                    <img src="images/AhoraColombia.jpg" alt="Ahora Colombia" class="party-logo">
+                    <div class="party-name">Ahora<br>Colombia</div>
+                    <div class="x-mark">✗</div>
+                </div>
+                <div class="option-card" onclick="selectParty(this, true)">
+                    <img src="images/DelaU.png" alt="Partido de la U" class="party-logo">
+                    <div class="party-name">Partido<br>de la U</div>
+                    <div class="x-mark">✗</div>
+                </div>
+                <div class="option-card" onclick="selectParty(this, false)">
+                    <img src="images/FrenteAmplioUnitario.jpg" alt="Frente Amplio Unitario" class="party-logo">
+                    <div class="party-name">Frente Amplio<br>Unitario</div>
+                    <div class="x-mark">✗</div>
+                </div>
+                <div class="option-card" onclick="selectParty(this, false)">
+                    <img src="images/PartidoLiberal.png" alt="Partido Liberal" class="party-logo">
+                    <div class="party-name">Partido<br>Liberal</div>
+                    <div class="x-mark">✗</div>
+                </div>
+                <div class="option-card" onclick="selectParty(this, false)">
+                    <img src="images/CoalicionCesar.png" alt="Frente Amplio del Cesar" class="party-logo">
+                    <div class="party-name">Frente Amplio<br>del Cesar</div>
+                    <div class="x-mark">✗</div>
+                </div>
+                <div class="option-card" onclick="selectParty(this, false)">
+                    <img src="images/conservador.jpg" alt="Partido Conservador" class="party-logo">
+                    <div class="party-name">Partido<br>Conservador</div>
+                    <div class="x-mark">✗</div>
+                </div>
+            </div>
+
+            <div class="error-message" id="partyError">
+                ❌ ¡Incorrecto! Debes seleccionar el <strong>Partido de la U</strong>
+            </div>
+        </div>
+
+        <!-- Pantalla 3: Elegir Número -->
+        <div class="screen" id="screen3">
+            <div class="step-indicator">PASO 2 DE 2</div>
+            <h2>ELIGE EL NÚMERO</h2>
+            <p class="subtitle">Marca con una X el número <strong>104</strong></p>
+
+            <div class="options-grid">
+                <div class="option-card" onclick="selectNumber(this, false)">
+                    <div class="number">101</div>
+                    <div class="party-name">Candidato 1</div>
+                    <div class="x-mark">✗</div>
+                </div>
+                <div class="option-card" onclick="selectNumber(this, false)">
+                    <div class="number">102</div>
+                    <div class="party-name">Candidato 2</div>
+                    <div class="x-mark">✗</div>
+                </div>
+                <div class="option-card" onclick="selectNumber(this, false)">
+                    <div class="number">103</div>
+                    <div class="party-name">Candidato 3</div>
+                    <div class="x-mark">✗</div>
+                </div>
+                <div class="option-card" onclick="selectNumber(this, true)">
+                    <div class="number">104</div>
+                    <div class="party-name">Raúl Machado</div>
+                    <div class="x-mark">✗</div>
+                </div>
+            </div>
+
+            <div class="error-message" id="numberError">
+                ❌ ¡Incorrecto! El número correcto es el <strong>104</strong>
+            </div>
+        </div>
+
+        <!-- Pantalla 4: Éxito -->
+        <div class="screen success-screen" id="screen4">
+            <div class="success-icon">🎉</div>
+            <h1>¡FELICIDADES!</h1>
+            <h2>YA SABES CÓMO VOTAR</h2>
+            <div class="candidate-info">
+                <h3>RAÚL MACHADO</h3>
+                <p>Lista 104 - Partido de la U</p>
+            </div>
+            <button class="btn" onclick="restart()"
+                style="background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);">
+                <span style="position: relative;">PRACTICAR DE NUEVO</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentScreen = 1;
+
+        function nextScreen(screenNumber) {
+            const current = document.getElementById('screen' + currentScreen);
+            const next = document.getElementById('screen' + screenNumber);
+
+            current.classList.add('exit');
+
+            setTimeout(() => {
+                current.classList.remove('active', 'exit');
+                next.classList.add('active');
+                currentScreen = screenNumber;
+            }, 600);
+        }
+
+        function selectParty(card, isCorrect) {
+            document.querySelectorAll('#screen2 .option-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+
+            if (isCorrect) {
+                setTimeout(() => {
+                    nextScreen(3);
+                }, 1000);
+            } else {
+                const errorMsg = document.getElementById('partyError');
+                errorMsg.classList.add('show');
+
+                setTimeout(() => {
+                    card.classList.remove('selected');
+                    errorMsg.classList.remove('show');
+                }, 2000);
+            }
+        }
+
+        function selectNumber(card, isCorrect) {
+            document.querySelectorAll('#screen3 .option-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+
+            if (isCorrect) {
+                setTimeout(() => {
+                    nextScreen(4);
+                }, 1000);
+            } else {
+                const errorMsg = document.getElementById('numberError');
+                errorMsg.classList.add('show');
+
+                setTimeout(() => {
+                    card.classList.remove('selected');
+                    errorMsg.classList.remove('show');
+                }, 2000);
+            }
+        }
+
+        function restart() {
+            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+            document.querySelectorAll('.error-message').forEach(e => e.classList.remove('show'));
+            nextScreen(1);
+        }
+    </script>
+</body>
+
+</html>
