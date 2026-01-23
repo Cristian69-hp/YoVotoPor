@@ -121,11 +121,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
+            overflow: hidden;
+            /* Disable native scrolling */
             cursor: crosshair;
             display: flex;
             align-items: center;
             justify-content: center;
+            touch-action: none;
+            /* Crucial for preventing default touch behaviors */
         }
 
         #svgImage {
@@ -383,11 +386,15 @@
         let scales = { 2: 0.7, 3: 0.7 }; // Escalas iniciales
         let isDrawing = false;
         let currentPath = [];
+        let initialPinchDistance = null;
+        let initialScale = 1;
 
         // Ajustes de zonas para archivo.svg (proporciones relativas)
+        // Partido de la U: logo arriba a la izquierda
+        // Número 104: Raúl Machado
         const validZones = {
-            party: { x: 0.01, y: 0.01, width: 0.40, height: 0.35 }, // Área superior izquierda para el logo de la U
-            number: { x: 0.18, y: 0.38, width: 0.15, height: 0.12 }  // Área para el número 104
+            party: { x: 0.05, y: 0.38, width: 0.15, height: 0.12 }, // Zona Partido de la U
+            number: { x: 0.17, y: 0.42, width: 0.13, height: 0.08 }   // Zona Número 104
         };
 
         function initializePage(pageNum) {
@@ -429,12 +436,12 @@
             const ctx = drawCanvas.getContext('2d');
 
             ctx.strokeStyle = 'black';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 2; // Linea negra delgada pero visible
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
             function startDrawing(e) {
-                e.preventDefault();
+                // Si es un evento de mouse real o un toque de un solo dedo
                 isDrawing = true;
                 currentPath = [];
                 const pos = getMousePos(wrapper, drawCanvas, e);
@@ -445,8 +452,6 @@
 
             function draw(e) {
                 if (!isDrawing) return;
-                e.preventDefault();
-
                 const pos = getMousePos(wrapper, drawCanvas, e);
                 currentPath.push(pos);
                 ctx.lineTo(pos.x, pos.y);
@@ -461,10 +466,16 @@
                 if (currentPath.length > 3) {
                     const zoneKey = pageNum === 2 ? 'party' : 'number';
                     if (isXInValidZone(currentPath, drawCanvas, zoneKey)) {
-                        setTimeout(() => {
-                            if (pageNum === 2) goToPage(3);
-                            else goToPage(4);
-                        }, 500);
+                        if (pageNum === 2) {
+                            setTimeout(() => goToPage(3), 500);
+                        } else {
+                            setTimeout(() => {
+                                document.getElementById('toast').textContent = "¡Felicidades! Lo lograste.";
+                                document.getElementById('toast').style.background = "#22c55e";
+                                showToast();
+                                setTimeout(() => goToPage(4), 1000);
+                            }, 500);
+                        }
                     } else {
                         showToast();
                         setTimeout(() => {
@@ -475,26 +486,51 @@
                 currentPath = [];
             }
 
-            // Mouse events
+            // Mouse events (for desktop testing)
             drawCanvas.addEventListener('mousedown', startDrawing);
             drawCanvas.addEventListener('mousemove', draw);
             drawCanvas.addEventListener('mouseup', stopDrawing);
             drawCanvas.addEventListener('mouseleave', stopDrawing);
 
-            // Touch events - ONLY drawing if 1 finger
+            // Touch events
             drawCanvas.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Prevent scrolling/zoom default browser behavior
                 if (e.touches.length === 1) {
                     startDrawing(e.touches[0]);
+                } else if (e.touches.length === 2) {
+                    // Start Pinch Zoom
+                    isDrawing = false;
+                    initialPinchDistance = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    initialScale = scales[pageNum];
                 }
-            });
+            }, { passive: false });
+
             drawCanvas.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 1) {
+                e.preventDefault();
+                if (e.touches.length === 1 && isDrawing) {
                     draw(e.touches[0]);
+                } else if (e.touches.length === 2 && initialPinchDistance) {
+                    // Handle Pinch Zoom
+                    const currentDistance = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    const zoomFactor = currentDistance / initialPinchDistance;
+                    scales[pageNum] = Math.min(Math.max(initialScale * zoomFactor, 0.5), 4);
+                    updateZoom(pageNum);
                 }
-            });
+            }, { passive: false });
+
             drawCanvas.addEventListener('touchend', (e) => {
-                stopDrawing();
-            });
+                e.preventDefault();
+                if (e.touches.length === 0) {
+                    if (isDrawing) stopDrawing();
+                    initialPinchDistance = null;
+                }
+            }, { passive: false });
         }
 
         function getMousePos(wrapper, canvas, e) {
@@ -512,19 +548,28 @@
 
         function isXInValidZone(path, canvas, zone) {
             if (path.length < 5) return false;
-            const validZone = validZones[zone];
 
-            let insideCount = 0;
-            for (let p of path) {
-                const relX = p.x / canvas.width;
-                const relY = p.y / canvas.height;
-                if (relX >= validZone.x && relX <= validZone.x + validZone.width &&
-                    relY >= validZone.y && relY <= validZone.y + validZone.height) {
-                    insideCount++;
-                }
-            }
-            // Requiere que al menos el 80% del trazo esté dentro de la zona
-            return (insideCount / path.length) > 0.8;
+            // Calcular el centro del trazo
+            let sumX = 0, sumY = 0;
+            path.forEach(p => {
+                sumX += p.x;
+                sumY += p.y;
+            });
+            const centerX = sumX / path.length;
+            const centerY = sumY / path.length;
+
+            // Convertir a coordenadas relativas
+            const relX = centerX / canvas.width;
+            const relY = centerY / canvas.height;
+
+            // Verificar si está en la zona válida
+            const validZone = validZones[zone];
+            return (
+                relX >= validZone.x &&
+                relX <= validZone.x + validZone.width &&
+                relY >= validZone.y &&
+                relY <= validZone.y + validZone.height
+            );
         }
 
         function zoomIn(pageNum) {
