@@ -402,8 +402,8 @@
 
         // Zonas de validación ajustadas para cubrir los campos del tarjetón
         const validZones = {
-            party: { x: 0.05, y: 0.05, width: 0.45, height: 0.4 }, // Área del logo y nombre del partido
-            number: { x: 0.1, y: 0.35, width: 0.3, height: 0.25 }   // Área del número 104
+            party: { x: 0.1, y: 0.35, width: 0.3, height: 0.25 }, // Área del logo y nombre del partido
+            number: { x: 0.40, y: 0.38, width: 0.08, height: 0.08 }   // Área del número 104
         };
 
         function initializePage(pageNum) {
@@ -449,6 +449,8 @@
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
+            let allPaths = []; // Almacenar todas las líneas dibujadas
+
             function startDrawing(e) {
                 isDrawing = true;
                 isValidDrawing = true;
@@ -477,21 +479,23 @@
                 touchIdentifier = null;
 
                 if (currentPath.length > 5) {
-                    const zone = pageNum === 2 ? 'party' : 'number';
-                    if (isXInValidZone(currentPath, drawCanvas, zone)) {
-                        showToast('¡Aprobado!', 'success');
-                        setTimeout(() => {
-                            if (pageNum === 2) {
-                                goToPage(3);
-                            } else {
-                                goToPage(4);
-                            }
-                        }, 500);
-                    } else {
-                        showToast('¡Error! Inténtalo de nuevo.', 'error');
-                        setTimeout(() => {
-                            ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-                        }, 1000);
+                    allPaths.push([...currentPath]); // Guardar el trazo actual
+
+                    // Validar solo si se han hecho al menos 2 trazos
+                    if (allPaths.length >= 2) {
+                        const zone = pageNum === 2 ? 'party' : 'number';
+                        const isValid = allPaths.every(path => isXInValidZone(path, drawCanvas, zone));
+
+                        if (isValid) {
+                            showToast('¡Aprobado!', 'success');
+                            setTimeout(() => {
+                                if (pageNum === 2) {
+                                    goToPage(3);
+                                } else {
+                                    goToPage(4);
+                                }
+                            }, 500);
+                        }
                     }
                 }
                 currentPath = [];
