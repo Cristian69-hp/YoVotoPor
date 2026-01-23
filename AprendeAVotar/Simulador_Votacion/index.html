@@ -140,7 +140,6 @@
             left: 0;
             pointer-events: auto;
             z-index: 10;
-            touch-action: none;
         }
 
         /* Header Instruction */
@@ -231,7 +230,25 @@
             box-shadow: 0 20px 40px rgba(34, 197, 94, 0.3);
         }
 
-        /* Animations Removed Toast */
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #ef4444;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
 
         /* Animations */
         @keyframes fadeInDown {
@@ -356,13 +373,19 @@
         <button class="btn" onclick="restart()">VOLVER A PRACTICAR</button>
     </div>
 
-    <!-- Success Circle (Removed floating toast) -->
+    <!-- Error Toast -->
+    <div id="toast" class="toast">¡Marca en el lugar correcto! Inténtalo de nuevo.</div>
 
     <script>
         let currentPage = 1;
-        let scales = { 2: 0.7, 3: 0.7 }; // Escalas iniciales
+        let scales = { 2: 0.7, 3: 0.7 };
         let isDrawing = false;
         let currentPath = [];
+        let initialPinchDistance = null;
+        let initialScale = 1;
+        let isValidDrawing = false;
+        let lastErrorTime = 0;
+        let touchIdentifier = null;
 
         // Coordenadas de las zonas válidas (ajustar según el SVG real)
         const validZones = {
@@ -384,7 +407,6 @@
             if (svgImage.complete) {
                 setupCanvas(pageNum);
                 setupDrawing(pageNum);
-                updateZoom(pageNum); // Apply initial 70% zoom
             }
         }
 
@@ -409,35 +431,37 @@
             const ctx = drawCanvas.getContext('2d');
 
             ctx.strokeStyle = 'black';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 3;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
             function startDrawing(e) {
-                e.preventDefault();
                 isDrawing = true;
+                isValidDrawing = true;
                 currentPath = [];
                 const pos = getMousePos(wrapper, drawCanvas, e);
                 currentPath.push(pos);
+
                 ctx.beginPath();
                 ctx.moveTo(pos.x, pos.y);
             }
 
             function draw(e) {
                 if (!isDrawing) return;
-                e.preventDefault();
-
                 const pos = getMousePos(wrapper, drawCanvas, e);
                 currentPath.push(pos);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.stroke();
+
+                if (isValidDrawing) {
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                }
             }
 
             function stopDrawing() {
                 if (!isDrawing) return;
                 isDrawing = false;
+                touchIdentifier = null;
 
-                // Validar si la X está en la zona correcta
                 if (currentPath.length > 5) {
                     const zone = pageNum === 2 ? 'party' : 'number';
                     if (isXInValidZone(currentPath, drawCanvas, zone)) {
@@ -464,20 +488,56 @@
             drawCanvas.addEventListener('mouseup', stopDrawing);
             drawCanvas.addEventListener('mouseleave', stopDrawing);
 
-            // Touch events - ONLY drawing if 1 finger
+            // Touch events - Handling both drawing and multi-touch zoom
             drawCanvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 if (e.touches.length === 1) {
+                    touchIdentifier = e.touches[0].identifier;
                     startDrawing(e.touches[0]);
+                } else if (e.touches.length === 2) {
+                    isDrawing = false;
+                    touchIdentifier = null;
+                    initialPinchDistance = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    initialScale = scales[pageNum];
                 }
-            });
+            }, { passive: false });
+
             drawCanvas.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 1) {
-                    draw(e.touches[0]);
+                e.preventDefault();
+                if (e.touches.length === 1 && isDrawing && touchIdentifier !== null) {
+                    const touch = Array.from(e.touches).find(t => t.identifier === touchIdentifier);
+                    if (touch) draw(touch);
+                } else if (e.touches.length === 2 && initialPinchDistance) {
+                    const currentDistance = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    const zoomFactor = currentDistance / initialPinchDistance;
+                    scales[pageNum] = Math.min(Math.max(initialScale * zoomFactor, 0.5), 4);
+                    updateZoom(pageNum);
                 }
-            });
+            }, { passive: false });
+
             drawCanvas.addEventListener('touchend', (e) => {
-                stopDrawing();
-            });
+                e.preventDefault();
+                if (e.touches.length === 0) {
+                    if (isDrawing) stopDrawing();
+                    initialPinchDistance = null;
+                    touchIdentifier = null;
+                } else if (e.touches.length === 1 && initialPinchDistance) {
+                    initialPinchDistance = null;
+                }
+            }, { passive: false });
+
+            drawCanvas.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                isDrawing = false;
+                initialPinchDistance = null;
+                touchIdentifier = null;
+            }, { passive: false });
         }
 
         function getMousePos(wrapper, canvas, e) {
@@ -495,28 +555,19 @@
 
         function isXInValidZone(path, canvas, zone) {
             if (path.length < 5) return false;
-
-            // Calcular el centro del trazo
-            let sumX = 0, sumY = 0;
-            path.forEach(p => {
-                sumX += p.x;
-                sumY += p.y;
-            });
-            const centerX = sumX / path.length;
-            const centerY = sumY / path.length;
-
-            // Convertir a coordenadas relativas
-            const relX = centerX / canvas.width;
-            const relY = centerY / canvas.height;
-
-            // Verificar si está en la zona válida
             const validZone = validZones[zone];
-            return (
-                relX >= validZone.x &&
-                relX <= validZone.x + validZone.width &&
-                relY >= validZone.y &&
-                relY <= validZone.y + validZone.height
-            );
+
+            let insideCount = 0;
+            for (let p of path) {
+                const relX = p.x / canvas.width;
+                const relY = p.y / canvas.height;
+                if (relX >= validZone.x && relX <= validZone.x + validZone.width &&
+                    relY >= validZone.y && relY <= validZone.y + validZone.height) {
+                    insideCount++;
+                }
+            }
+            // Requiere que al menos el 80% del trazo esté dentro de la zona
+            return (insideCount / path.length) > 0.8;
         }
 
         function zoomIn(pageNum) {
@@ -548,9 +599,15 @@
 
             if (pageNum === 2 || pageNum === 3) {
                 initializePage(pageNum);
-                // Force update zoom after page change
-                setTimeout(() => updateZoom(pageNum), 50);
             }
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
 
         function restart() {
