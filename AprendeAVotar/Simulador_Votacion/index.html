@@ -5,8 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aprende a Votar - Raúl Machado</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Inter for UI and Bebas Neue for impact headings -->
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;800&display=swap"
+        rel="stylesheet">
     <style>
+        :root {
+            --primary-orange: #FF6B35;
+            --primary-dark: #cc562a;
+            --primary-light: #FF8C42;
+            --bg-color: #0f172a;
+            --paper-color: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --transition-speed: 0.8s;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,656 +27,587 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0a0a0a;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-color);
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 900px;
-            width: 100%;
-            perspective: 1000px;
-        }
-
-        .screen {
-            display: none;
-            position: relative;
-            border-radius: 25px;
-            padding: 50px 40px;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
             overflow: hidden;
+            perspective: 2000px;
+        }
+
+        /* Notebook Container */
+        .notebook {
+            width: 100%;
+            max-width: 1000px;
+            height: 85vh;
+            position: relative;
             transform-style: preserve-3d;
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+            background: #273549;
+            /* Cover/Spine color */
         }
 
-        .screen.active {
-            display: block;
-            animation: slideInRight 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-
-        .screen.exit {
-            animation: slideOutLeft 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(100%) rotateY(-30deg);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0) rotateY(0);
-            }
-        }
-
-        @keyframes slideOutLeft {
-            from {
-                opacity: 1;
-                transform: translateX(0) rotateY(0);
-            }
-
-            to {
-                opacity: 0;
-                transform: translateX(-100%) rotateY(30deg);
-            }
-        }
-
-        /* Pantalla de Inicio */
-        #screen1 {
-            background: url('https://i.ibb.co/fVHzMmSC/Raul-Machado-IMG.jpg') center/cover no-repeat;
-            background-size: cover;
-            min-height: 80vh;
+        /* Individual Pages */
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: var(--paper-color);
+            transform-origin: left center;
+            transition: transform var(--transition-speed) cubic-bezier(0.645, 0.045, 0.355, 1);
+            transform-style: preserve-3d;
+            z-index: 1;
+            overflow: hidden;
+            border-radius: 0 10px 10px 0;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
         }
 
-        #screen1 .content {
-            position: relative;
+        /* Spine detail */
+        .page::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 30px;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
+            z-index: 10;
+        }
+
+        .page.active {
+            z-index: 5;
+            pointer-events: all;
+            opacity: 1;
+            transform: rotateY(0deg);
+        }
+
+        .page.flipped {
+            transform: rotateY(-180deg);
             z-index: 1;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        /* Page Content Padding */
+        .page-content {
+            padding: 60px 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+        }
+
+        /* Screen 1: Welcome */
+        #page1 {
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://i.ibb.co/fVHzMmSC/Raul-Machado-IMG.jpg') center/cover no-repeat;
+            color: white;
+            justify-content: center;
+            align-items: center;
             text-align: center;
         }
 
-        .title-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            padding: 15px 40px;
-            border-radius: 50px;
-            margin-bottom: 30px;
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.5em;
-            letter-spacing: 3px;
-            color: white;
-            animation: float 3s ease-in-out infinite;
+        #page1 .welcome-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 600px;
+            animation: fadeInDown 1s ease-out;
         }
 
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
+        /* Heading Styles */
         h1 {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 5em;
-            color: white;
-            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            font-size: 5rem;
             margin-bottom: 20px;
-            letter-spacing: 5px;
-            animation: scaleIn 0.8s ease-out;
-        }
-
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.5);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .intro-box {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 30px 40px;
-            margin: 30px auto;
-            max-width: 600px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .intro-box h3 {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 2em;
-            color: #FF6B35;
-            margin-bottom: 15px;
-            letter-spacing: 2px;
-        }
-
-        .intro-box p {
-            font-size: 1.1em;
-            color: #333;
-            line-height: 1.8;
-        }
-
-        /* Pantallas internas */
-        .screen:not(#screen1) {
-            background: white;
+            letter-spacing: 4px;
+            line-height: 0.9;
+            background: linear-gradient(to bottom, #ffffff, #ffaa80);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         h2 {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 3em;
-            color: #FF6B35;
-            text-align: center;
-            margin-bottom: 20px;
-            letter-spacing: 3px;
-            animation: fadeInDown 0.6s ease-out;
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            font-size: 3.5rem;
+            color: var(--primary-orange);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
         }
 
         .subtitle {
-            font-size: 1.2em;
-            color: #666;
-            text-align: center;
+            font-size: 1.2rem;
+            color: var(--text-muted);
             margin-bottom: 40px;
-            animation: fadeIn 0.8s ease-out 0.2s backwards;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
+        /* Buttons */
         .btn {
-            display: block;
-            width: 100%;
-            max-width: 350px;
-            margin: 0 auto;
-            padding: 20px 50px;
-            background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+            display: inline-block;
+            padding: 20px 60px;
+            background: var(--primary-orange);
             color: white;
-            border: none;
-            border-radius: 50px;
+            text-decoration: none;
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.8em;
-            letter-spacing: 2px;
+            font-size: 2rem;
+            border-radius: 50px;
+            border: none;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transition: all 0.3s ease;
             box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn:hover::before {
-            width: 300px;
-            height: 300px;
+            letter-spacing: 2px;
         }
 
         .btn:hover {
-            transform: translateY(-5px) scale(1.05);
+            background: var(--primary-dark);
+            transform: translateY(-5px);
             box-shadow: 0 15px 40px rgba(255, 107, 53, 0.6);
         }
 
         .btn:active {
-            transform: scale(0.95);
+            transform: translateY(0);
         }
 
-        .options-grid {
+        /* Step Indicators */
+        .step-tag {
+            background: rgba(255, 107, 53, 0.1);
+            color: var(--primary-orange);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        /* Grid for Options */
+        .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 25px;
-            margin: 40px 0;
-            animation: fadeIn 1s ease-out 0.4s backwards;
+            margin-top: 30px;
         }
 
-        .option-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border: 4px solid #dee2e6;
+        .card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
             border-radius: 20px;
-            padding: 35px 20px;
+            padding: 25px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
         }
 
-        .option-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 107, 53, 0.1) 0%, transparent 70%);
-            transform: scale(0);
-            transition: transform 0.6s;
+        .card:hover {
+            border-color: var(--primary-orange);
+            background: white;
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
         }
 
-        .option-card:hover::before {
-            transform: scale(1);
+        .card.selected {
+            border-color: var(--primary-orange);
+            background: #fff7ed;
+            box-shadow: inset 0 0 0 4px var(--primary-orange);
         }
 
-        .option-card:hover {
-            transform: translateY(-10px) scale(1.05);
-            border-color: #FF6B35;
-            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.3);
+        .card.correct.selected {
+            background: #fff7ed;
         }
 
-        .option-card.selected {
-            background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
-            color: white;
-            border-color: #FF6B35;
-            animation: pulse 0.6s;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.1);
-            }
-        }
-
-        .option-card .x-mark {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0) rotate(-180deg);
-            font-size: 100px;
-            font-weight: bold;
-            color: rgba(255, 255, 255, 0.3);
-            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-
-        .option-card.selected .x-mark {
-            transform: translate(-50%, -50%) scale(1) rotate(0deg);
-        }
-
-        .option-card .party-logo {
+        .card .logo {
+            width: 100px;
             height: 100px;
-            width: auto;
-            max-width: 100%;
             object-fit: contain;
             margin-bottom: 15px;
-            transition: transform 0.3s;
+            transition: transform 0.3s ease;
         }
 
-        .option-card:hover .party-logo {
+        .card:hover .logo {
             transform: scale(1.1);
         }
 
-        .option-card .party-name {
+        .card .name {
+            font-weight: 800;
+            font-size: 1rem;
+            color: var(--text-main);
+            text-transform: uppercase;
+        }
+
+        .card .number {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.3em;
-            letter-spacing: 1px;
-            line-height: 1.1;
+            font-size: 5rem;
+            color: var(--primary-orange);
+            line-height: 1;
         }
 
-        .option-card .number {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 4em;
-            color: #FF6B35;
-            margin-bottom: 10px;
+        /* X Mark Overlay */
+        .x-mark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            pointer-events: none;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 5;
         }
 
-        .option-card.selected .number {
-            color: white;
+        .card.selected .x-mark {
+            transform: translate(-50%, -50%) scale(1);
         }
 
-        .error-message {
-            background: linear-gradient(135deg, #ff5252 0%, #f44336 100%);
-            border: 3px solid #d32f2f;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 30px;
+        .x-mark svg {
+            width: 120px;
+            height: 120px;
+            stroke: var(--primary-orange);
+            stroke-width: 15;
+            filter: drop-shadow(0 5px 15px rgba(255, 107, 53, 0.4));
+        }
+
+        /* Success Page */
+        #page4 {
+            background: white;
             text-align: center;
-            color: white;
-            font-weight: bold;
-            font-size: 1.2em;
-            display: none;
-            animation: shake 0.6s, fadeIn 0.3s;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        @keyframes shake {
-
-            0%,
-            100% {
-                transform: translateX(0);
-            }
-
-            10%,
-            30%,
-            50%,
-            70%,
-            90% {
-                transform: translateX(-10px);
-            }
-
-            20%,
-            40%,
-            60%,
-            80% {
-                transform: translateX(10px);
-            }
-        }
-
-        .success-screen {
-            text-align: center;
-            background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
-            color: white;
+            justify-content: center;
+            align-items: center;
         }
 
         .success-icon {
-            font-size: 120px;
+            width: 150px;
+            height: 150px;
+            background: #22c55e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin-bottom: 30px;
-            animation: bounce 1s infinite;
+            color: white;
+            font-size: 5rem;
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(34, 197, 94, 0.3);
         }
 
-        @keyframes bounce {
+        .confetti-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
 
-            0%,
-            20%,
-            50%,
-            80%,
-            100% {
+        /* Error Message */
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #ef4444;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
                 transform: translateY(0);
             }
+        }
 
-            40% {
-                transform: translateY(-40px);
+        @keyframes popIn {
+            from {
+                transform: scale(0);
             }
 
-            60% {
-                transform: translateY(-20px);
+            to {
+                transform: scale(1);
             }
         }
 
-        .success-screen h1 {
-            color: white;
-            text-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .success-screen h2 {
-            color: white;
-        }
-
-        .step-indicator {
-            font-family: 'Bebas Neue', sans-serif;
-            text-align: center;
-            font-size: 1.2em;
-            color: #999;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-        }
-
-        .candidate-info {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 25px;
-            border-radius: 20px;
-            margin: 30px 0;
-            text-align: center;
-        }
-
-        .candidate-info h3 {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 3em;
-            margin-bottom: 10px;
-            letter-spacing: 3px;
-        }
-
-        .candidate-info p {
-            font-size: 1.3em;
-            letter-spacing: 1px;
-        }
-
+        /* Responsive */
         @media (max-width: 768px) {
             h1 {
-                font-size: 3.5em;
+                font-size: 3rem;
             }
 
             h2 {
-                font-size: 2.2em;
+                font-size: 2.2rem;
             }
 
-            .options-grid {
+            .grid {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .card {
+                padding: 15px;
+                min-height: 150px;
+            }
+
+            .card .logo {
+                width: 60px;
+                height: 60px;
+            }
+
+            .card .number {
+                font-size: 3rem;
+            }
+
+            .x-mark svg {
+                width: 80px;
+                height: 80px;
+            }
+
+            .page-content {
+                padding: 30px 20px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <!-- Pantalla 1: Inicio -->
-        <div class="screen active" id="screen1">
-            <div class="content">
-                <div class="title-badge">🗳️ TUTORIAL DE VOTACIÓN</div>
-                <h1>RAÚL MACHADO</h1>
-
-                <div class="intro-box">
-                    <h3>¿Listo para votar?</h3>
-                    <p>Te enseñaremos de forma fácil y rápida cómo marcar tu voto correctamente el día de las
-                        elecciones.</p>
+    <div class="notebook">
+        <!-- PAGE 1: Welcome -->
+        <div class="page active" id="page1">
+            <div class="page-content">
+                <div
+                    style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <div class="welcome-card">
+                        <div class="step-tag" style="background: rgba(255,255,255,0.2); color: white;">Simulador
+                            Electoral</div>
+                        <h1>RAÚL MACHADO</h1>
+                        <p style="font-size: 1.5rem; margin-bottom: 30px; opacity: 0.9;">¿Quieres aprender a votar por
+                            Raúl Machado?</p>
+                        <button class="btn" onclick="goToPage(2)">INICIAR A VOTAR</button>
+                    </div>
                 </div>
-
-                <button class="btn" onclick="nextScreen(2)">
-                    <span style="position: relative;">COMENZAR</span>
-                </button>
             </div>
         </div>
 
-        <!-- Pantalla 2: Elegir Partido -->
-        <div class="screen" id="screen2">
-            <div class="step-indicator">PASO 1 DE 2</div>
-            <h2>ELIGE EL PARTIDO</h2>
-            <p class="subtitle">Marca con una X el logo del <strong>Partido de la U</strong></p>
+        <!-- PAGE 2: Party Selection -->
+        <div class="page" id="page2">
+            <div class="page-content">
+                <div class="step-tag">Paso 01</div>
+                <h2>SELECCIONA EL PARTIDO</h2>
+                <p class="subtitle">Busca y marca con una [X] el logo del <b>Partido de la U</b></p>
 
-            <div class="options-grid">
-                <div class="option-card" onclick="selectParty(this, false)">
-                    <img src="https://i.ibb.co/9kPjbx7y/Ahora-Colombia.jpg" alt="Ahora Colombia" class="party-logo">
-                    <div class="party-name">Ahora<br>Colombia</div>
-                    <div class="x-mark">✗</div>
+                <div class="grid">
+                    <div class="card" onclick="handleCardClick(this, 'party', false)">
+                        <img src="Raul_Machado/images/AhoraColombia.jpg" alt="Ahora Colombia" class="logo">
+                        <span class="name">Ahora Colombia</span>
+                        <div class="x-mark"><svg viewBox="0 0 100 100">
+                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
+                            </svg></div>
+                    </div>
+                    <div class="card" onclick="handleCardClick(this, 'party', true)">
+                        <img src="Raul_Machado/images/DelaU.png" alt="Partido de la U" class="logo">
+                        <span class="name">Partido de la U</span>
+                        <div class="x-mark"><svg viewBox="0 0 100 100">
+                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
+                            </svg></div>
+                    </div>
+                    <div class="card" onclick="handleCardClick(this, 'party', false)">
+                        <img src="Raul_Machado/images/FrenteAmplioUnitario.jpg" alt="Frente Amplio Unitario"
+                            class="logo">
+                        <span class="name">Frente Amplio Unitario</span>
+                        <div class="x-mark"><svg viewBox="0 0 100 100">
+                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
+                            </svg></div>
+                    </div>
+                    <div class="card" onclick="handleCardClick(this, 'party', false)">
+                        <img src="Raul_Machado/images/PartidoLiberal.png" alt="Partido Liberal" class="logo">
+                        <span class="name">Partido Liberal</span>
+                        <div class="x-mark"><svg viewBox="0 0 100 100">
+                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
+                            </svg></div>
+                    </div>
+                    <div class="card" onclick="handleCardClick(this, 'party', false)">
+                        <img src="Raul_Machado/images/CoalicionCesar.png" alt="Coalición Cesar" class="logo">
+                        <span class="name">Coalición Cesar</span>
+                        <div class="x-mark"><svg viewBox="0 0 100 100">
+                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
+                            </svg></div>
+                    </div>
+                    <div class="card" onclick="handleCardClick(this, 'party', false)">
+                        <img src="Raul_Machado/images/conservador.jpg" alt="Conservador" class="logo">
+                        <span class="name">Partido Conservador</span>
+                        <div class="x-mark"><svg viewBox="0 0 100 100">
+                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
+                            </svg></div>
+                    </div>
                 </div>
-                <div class="option-card" onclick="selectParty(this, true)">
-                    <img src="https://i.ibb.co/Fk0rtCTC/Dela-U.png" alt="Partido de la U" class="party-logo">
-                    <div class="party-name">Partido<br>de la U</div>
-                    <div class="x-mark">✗</div>
-                </div>
-                <div class="option-card" onclick="selectParty(this, false)">
-                    <img src="https://i.ibb.co/VWXpCHFn/Frente-Amplio-Unitario.jpg" alt="Frente Amplio Unitario"
-                        class="party-logo">
-                    <div class="party-name">Frente Amplio<br>Unitario</div>
-                    <div class="x-mark">✗</div>
-                </div>
-                <div class="option-card" onclick="selectParty(this, false)">
-                    <img src="https://i.ibb.co/Z6JbR51G/Partido-Liberal.png" alt="Partido Liberal" class="party-logo">
-                    <div class="party-name">Partido<br>Liberal</div>
-                    <div class="x-mark">✗</div>
-                </div>
-                <div class="option-card" onclick="selectParty(this, false)">
-                    <img src="https://i.ibb.co/DDGztWk4/Coalicion-Cesar.png" alt="Frente Amplio del Cesar"
-                        class="party-logo">
-                    <div class="party-name">Frente Amplio<br>del Cesar</div>
-                    <div class="x-mark">✗</div>
-                </div>
-                <div class="option-card" onclick="selectParty(this, false)">
-                    <img src="https://i.ibb.co/wZQ1YM2y/conservador.jpg" alt="Partido Conservador" class="party-logo">
-                    <div class="party-name">Partido<br>Conservador</div>
-                    <div class="x-mark">✗</div>
-                </div>
-            </div>
-
-            <div class="error-message" id="partyError">
-                ❌ ¡Incorrecto! Debes seleccionar el <strong>Partido de la U</strong>
-            </div>
-        </div>
-
-        <!-- Pantalla 3: Elegir Número -->
-        <div class="screen" id="screen3">
-            <div class="step-indicator">PASO 2 DE 2</div>
-            <h2>ELIGE EL NÚMERO</h2>
-            <p class="subtitle">Marca con una X el número <strong>104</strong></p>
-
-            <div class="options-grid">
-                <div class="option-card" onclick="selectNumber(this, false)">
-                    <div class="number">101</div>
-                    <div class="party-name">Candidato 1</div>
-                    <div class="x-mark">✗</div>
-                </div>
-                <div class="option-card" onclick="selectNumber(this, false)">
-                    <div class="number">102</div>
-                    <div class="party-name">Candidato 2</div>
-                    <div class="x-mark">✗</div>
-                </div>
-                <div class="option-card" onclick="selectNumber(this, false)">
-                    <div class="number">103</div>
-                    <div class="party-name">Candidato 3</div>
-                    <div class="x-mark">✗</div>
-                </div>
-                <div class="option-card" onclick="selectNumber(this, true)">
-                    <div class="number">104</div>
-                    <div class="party-name">Raúl Machado</div>
-                    <div class="x-mark">✗</div>
-                </div>
-            </div>
-
-            <div class="error-message" id="numberError">
-                ❌ ¡Incorrecto! El número correcto es el <strong>104</strong>
             </div>
         </div>
 
-        <!-- Pantalla 4: Éxito -->
-        <div class="screen success-screen" id="screen4">
-            <div class="success-icon">🎉</div>
-            <h1>¡FELICIDADES!</h1>
-            <h2>YA SABES CÓMO VOTAR</h2>
-            <div class="candidate-info">
-                <h3>RAÚL MACHADO</h3>
-                <p>Lista 104 - Partido de la U</p>
+        <!-- PAGE 3: Candidate Selection -->
+        <div class="page" id="page3">
+            <div class="page-content">
+                <div class="step-tag">Paso 02</div>
+                <h2>SELECCIONA EL NÚMERO</h2>
+                <p class="subtitle">Marca con una [X] el número de Raúl Machado: <b>104</b></p>
+
+                <div class="grid">
+                    <div class="card" onclick="handleCardClick(this, 'candidate', false)">
+                        <div class="number">101</div>
+                        <span class="name">Candidato 1</span>
+                        <div class="x-mark"><svg viewBox="0 0 100 100">
+                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
+                            </svg></div>
+                    </div>
+                    <div class="card" onclick="handleCardClick(this, 'candidate', false)">
+                        <div class="number">102</div>
+                        <span class="name">Candidato 2</span>
+                        <div class="x-mark"><svg viewBox="0 0 100 100">
+                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
+                            </svg></div>
+                    </div>
+                    <div class="card" onclick="handleCardClick(this, 'candidate', false)">
+                        <div class="number">103</div>
+                        <span class="name">Candidato 3</span>
+                        <div class="x-mark"><svg viewBox="0 0 100 100">
+                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
+                            </svg></div>
+                    </div>
+                    <div class="card" onclick="handleCardClick(this, 'candidate', true)">
+                        <div class="number">104</div>
+                        <span class="name">Raúl Machado</span>
+                        <div class="x-mark"><svg viewBox="0 0 100 100">
+                                <path d="M20,20 L80,80 M80,20 L20,80" fill="none" />
+                            </svg></div>
+                    </div>
+                </div>
             </div>
-            <button class="btn" onclick="restart()"
-                style="background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);">
-                <span style="position: relative;">PRACTICAR DE NUEVO</span>
-            </button>
+        </div>
+
+        <!-- PAGE 4: Success -->
+        <div class="page" id="page4">
+            <div class="page-content">
+                <div class="success-icon">✓</div>
+                <h1
+                    style="background: linear-gradient(to bottom, var(--text-main), var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    ¡PROCESO EXITOSO!</h1>
+                <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; max-width: 500px;">Has
+                    aprendido correctamente cómo votar por <b>Raúl Machado</b>. ¡Gracias por participar!</p>
+
+                <div
+                    style="background: #fff7ed; padding: 30px; border-radius: 20px; border: 2px dashed var(--primary-orange); margin-bottom: 40px;">
+                    <p style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--primary-orange);">
+                        104 - PARTIDO DE LA U</p>
+                </div>
+
+                <button class="btn" onclick="restart()">VOLVER A PRACTICAR</button>
+            </div>
         </div>
     </div>
 
+    <!-- Error Toast -->
+    <div id="toast" class="toast">¡Selección Incorrecta! Inténtalo de nuevo.</div>
+
     <script>
-        let currentScreen = 1;
+        let currentPage = 1;
 
-        function nextScreen(screenNumber) {
-            const current = document.getElementById('screen' + currentScreen);
-            const next = document.getElementById('screen' + screenNumber);
+        function goToPage(pageNumber) {
+            const current = document.getElementById(`page${currentPage}`);
+            const next = document.getElementById(`page${pageNumber}`);
 
-            current.classList.add('exit');
-
-            setTimeout(() => {
-                current.classList.remove('active', 'exit');
+            if (pageNumber > currentPage) {
+                // Flip effect
+                current.classList.add('flipped');
+                current.classList.remove('active');
                 next.classList.add('active');
-                currentScreen = screenNumber;
-            }, 600);
+            } else {
+                // Back effect
+                const pages = document.querySelectorAll('.page');
+                pages.forEach((p, idx) => {
+                    if (idx + 1 >= pageNumber) {
+                        p.classList.remove('flipped');
+                    }
+                });
+                currentPage = pageNumber;
+                current.classList.remove('active');
+                next.classList.add('active');
+            }
+            currentPage = pageNumber;
         }
 
-        function selectParty(card, isCorrect) {
-            document.querySelectorAll('#screen2 .option-card').forEach(c => c.classList.remove('selected'));
+        function handleCardClick(card, type, isCorrect) {
+            // Remove selection from others in same group
+            const container = card.parentElement;
+            container.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+
+            // Add selection
             card.classList.add('selected');
 
             if (isCorrect) {
                 setTimeout(() => {
-                    nextScreen(3);
+                    if (type === 'party') goToPage(3);
+                    else goToPage(4);
                 }, 1000);
             } else {
-                const errorMsg = document.getElementById('partyError');
-                errorMsg.classList.add('show');
-
+                showToast();
                 setTimeout(() => {
                     card.classList.remove('selected');
-                    errorMsg.classList.remove('show');
-                }, 2000);
+                }, 1500);
             }
         }
 
-        function selectNumber(card, isCorrect) {
-            document.querySelectorAll('#screen3 .option-card').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-
-            if (isCorrect) {
-                setTimeout(() => {
-                    nextScreen(4);
-                }, 1000);
-            } else {
-                const errorMsg = document.getElementById('numberError');
-                errorMsg.classList.add('show');
-
-                setTimeout(() => {
-                    card.classList.remove('selected');
-                    errorMsg.classList.remove('show');
-                }, 2000);
-            }
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
 
         function restart() {
-            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
-            document.querySelectorAll('.error-message').forEach(e => e.classList.remove('show'));
-            nextScreen(1);
+            // Reset all pages
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(p => {
+                p.classList.remove('flipped', 'active');
+            });
+
+            // Reset cards
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+
+            // Back to first
+            currentPage = 1;
+            document.getElementById('page1').classList.add('active');
         }
     </script>
 </body>
