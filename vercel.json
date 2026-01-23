@@ -1,8 +1,8 @@
 {
     "rewrites": [
         {
-            "source": "/henry-riaño",
-            "destination": "/HenryRiaño/index.html"
+            "source": "/henry-riano",
+            "destination": "/HenryRiano/index.html"
         },
         {
             "source": "/raul-machado",
