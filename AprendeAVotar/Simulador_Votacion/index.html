@@ -449,123 +449,134 @@
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
-            let allPaths = []; // Almacenar todas las líneas dibujadas
+            // Verificar si ya existen los event listeners para no duplicarlos
+            if (!drawCanvas.dataset.listenersAdded) {
+                let allPaths = []; // Almacenar todas las líneas dibujadas
 
-            function startDrawing(e) {
-                isDrawing = true;
-                isValidDrawing = true;
-                currentPath = [];
-                const pos = getMousePos(wrapper, drawCanvas, e);
-                currentPath.push(pos);
+                function startDrawing(e) {
+                    isDrawing = true;
+                    isValidDrawing = true;
+                    currentPath = [];
+                    const pos = getMousePos(wrapper, drawCanvas, e);
+                    currentPath.push(pos);
 
-                ctx.beginPath();
-                ctx.moveTo(pos.x, pos.y);
-            }
-
-            function draw(e) {
-                if (!isDrawing) return;
-                const pos = getMousePos(wrapper, drawCanvas, e);
-                currentPath.push(pos);
-
-                if (isValidDrawing) {
-                    ctx.lineTo(pos.x, pos.y);
-                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y);
                 }
-            }
 
-            function stopDrawing() {
-                if (!isDrawing) return;
-                isDrawing = false;
-                touchIdentifier = null;
+                function draw(e) {
+                    if (!isDrawing) return;
+                    const pos = getMousePos(wrapper, drawCanvas, e);
+                    currentPath.push(pos);
 
-                if (currentPath.length > 5) {
-                    allPaths.push([...currentPath]); // Guardar el trazo actual
-
-                    const zone = pageNum === 2 ? 'party' : 'number';
-
-                    // Validar si la línea actual está en la zona correcta
-                    if (!isXInValidZone(currentPath, drawCanvas, zone)) {
-                        showToast('¡Error! Inténtalo de nuevo.', 'error');
-                        setTimeout(() => {
-                            ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-                            allPaths = []; // Limpiar todas las líneas guardadas
-                        }, 1000);
-                    }
-                    // Validar solo si se han hecho al menos 2 trazos
-                    else if (allPaths.length >= 2) {
-                        const isValid = allPaths.every(path => isXInValidZone(path, drawCanvas, zone));
-
-                        if (isValid) {
-                            showToast('¡Aprobado!', 'success');
-                            setTimeout(() => {
-                                if (pageNum === 2) {
-                                    goToPage(3);
-                                } else {
-                                    goToPage(4);
-                                }
-                            }, 500);
-                        }
+                    if (isValidDrawing) {
+                        ctx.lineTo(pos.x, pos.y);
+                        ctx.stroke();
                     }
                 }
-                currentPath = [];
-            }
 
-            // Mouse events
-            drawCanvas.addEventListener('mousedown', startDrawing);
-            drawCanvas.addEventListener('mousemove', draw);
-            drawCanvas.addEventListener('mouseup', stopDrawing);
-            drawCanvas.addEventListener('mouseleave', stopDrawing);
-
-            // Touch events - Zoom con 2 dedos, dibujo con 1
-            drawCanvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (e.touches.length === 1) {
-                    touchIdentifier = e.touches[0].identifier;
-                    startDrawing(e.touches[0]);
-                } else if (e.touches.length === 2) {
+                function stopDrawing() {
+                    if (!isDrawing) return;
                     isDrawing = false;
                     touchIdentifier = null;
-                    initialPinchDistance = Math.hypot(
-                        e.touches[0].pageX - e.touches[1].pageX,
-                        e.touches[0].pageY - e.touches[1].pageY
-                    );
-                    initialScale = scales[pageNum];
-                }
-            }, { passive: false });
 
-            drawCanvas.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                if (e.touches.length === 1 && isDrawing && touchIdentifier !== null) {
-                    const touch = Array.from(e.touches).find(t => t.identifier === touchIdentifier);
-                    if (touch) draw(touch);
-                } else if (e.touches.length === 2 && initialPinchDistance) {
-                    const currentDistance = Math.hypot(
-                        e.touches[0].pageX - e.touches[1].pageX,
-                        e.touches[0].pageY - e.touches[1].pageY
-                    );
-                    const zoomFactor = currentDistance / initialPinchDistance;
-                    scales[pageNum] = Math.min(Math.max(initialScale * zoomFactor, 0.7), 4);
-                    updateZoom(pageNum);
-                }
-            }, { passive: false });
+                    if (currentPath.length > 5) {
+                        allPaths.push([...currentPath]); // Guardar el trazo actual
 
-            drawCanvas.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                if (e.touches.length === 0) {
-                    if (isDrawing) stopDrawing();
+                        const zone = pageNum === 2 ? 'party' : 'number';
+
+                        // Validar si la línea actual está en la zona correcta
+                        if (!isXInValidZone(currentPath, drawCanvas, zone)) {
+                            showToast('¡Error! Inténtalo de nuevo.', 'error');
+                            setTimeout(() => {
+                                ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+                                allPaths = []; // Limpiar todas las líneas guardadas
+                            }, 1000);
+                        }
+                        // Validar solo si se han hecho al menos 2 trazos
+                        else if (allPaths.length >= 2) {
+                            const isValid = allPaths.every(path => isXInValidZone(path, drawCanvas, zone));
+
+                            if (isValid) {
+                                showToast('¡Aprobado!', 'success');
+                                setTimeout(() => {
+                                    allPaths = []; // Limpiar para el próximo intento
+                                    if (pageNum === 2) {
+                                        goToPage(3);
+                                    } else {
+                                        goToPage(4);
+                                    }
+                                }, 500);
+                            }
+                        }
+                    }
+                    currentPath = [];
+                }
+
+                // Función para limpiar allPaths desde fuera
+                drawCanvas.clearPaths = function () {
+                    allPaths = [];
+                };
+
+                // Mouse events
+                drawCanvas.addEventListener('mousedown', startDrawing);
+                drawCanvas.addEventListener('mousemove', draw);
+                drawCanvas.addEventListener('mouseup', stopDrawing);
+                drawCanvas.addEventListener('mouseleave', stopDrawing);
+
+                // Touch events - Zoom con 2 dedos, dibujo con 1
+                drawCanvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (e.touches.length === 1) {
+                        touchIdentifier = e.touches[0].identifier;
+                        startDrawing(e.touches[0]);
+                    } else if (e.touches.length === 2) {
+                        isDrawing = false;
+                        touchIdentifier = null;
+                        initialPinchDistance = Math.hypot(
+                            e.touches[0].pageX - e.touches[1].pageX,
+                            e.touches[0].pageY - e.touches[1].pageY
+                        );
+                        initialScale = scales[pageNum];
+                    }
+                }, { passive: false });
+
+                drawCanvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    if (e.touches.length === 1 && isDrawing && touchIdentifier !== null) {
+                        const touch = Array.from(e.touches).find(t => t.identifier === touchIdentifier);
+                        if (touch) draw(touch);
+                    } else if (e.touches.length === 2 && initialPinchDistance) {
+                        const currentDistance = Math.hypot(
+                            e.touches[0].pageX - e.touches[1].pageX,
+                            e.touches[0].pageY - e.touches[1].pageY
+                        );
+                        const zoomFactor = currentDistance / initialPinchDistance;
+                        scales[pageNum] = Math.min(Math.max(initialScale * zoomFactor, 0.7), 4);
+                        updateZoom(pageNum);
+                    }
+                }, { passive: false });
+
+                drawCanvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    if (e.touches.length === 0) {
+                        if (isDrawing) stopDrawing();
+                        initialPinchDistance = null;
+                        touchIdentifier = null;
+                    } else if (e.touches.length === 1 && initialPinchDistance) {
+                        initialPinchDistance = null;
+                    }
+                }, { passive: false });
+
+                drawCanvas.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    isDrawing = false;
                     initialPinchDistance = null;
                     touchIdentifier = null;
-                } else if (e.touches.length === 1 && initialPinchDistance) {
-                    initialPinchDistance = null;
-                }
-            }, { passive: false });
+                }, { passive: false });
 
-            drawCanvas.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                isDrawing = false;
-                initialPinchDistance = null;
-                touchIdentifier = null;
-            }, { passive: false });
+                drawCanvas.dataset.listenersAdded = 'true';
+            }
         }
 
         function getMousePos(wrapper, canvas, e) {
@@ -642,10 +653,18 @@
 
         function restart() {
             scales = { 2: 0.7, 3: 0.7 };
+
+            // Limpiar canvas y resetear allPaths
             document.querySelectorAll('canvas').forEach(c => {
                 const ctx = c.getContext('2d');
                 ctx.clearRect(0, 0, c.width, c.height);
+
+                // Resetear allPaths si existe la función
+                if (c.clearPaths) {
+                    c.clearPaths();
+                }
             });
+
             goToPage(1);
         }
     </script>
