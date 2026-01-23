@@ -386,8 +386,8 @@
 
         // Ajustes de zonas para archivo.svg (proporciones relativas)
         const validZones = {
-            party: { x: 0.01, y: 0.01, width: 0.40, height: 0.35 }, // Área superior izquierda para el logo de la U
-            number: { x: 0.18, y: 0.38, width: 0.15, height: 0.12 }  // Área para el número 104
+            party: { x: 0.05, y: 0.35, width: 0.3, height: 0.15 }, // Zona Partido de la U (Aprox)
+            number: { x: 0.2, y: 0.4, width: 0.1, height: 0.08 }   // Zona Número 104 (Aprox)
         };
 
         function initializePage(pageNum) {
@@ -512,19 +512,28 @@
 
         function isXInValidZone(path, canvas, zone) {
             if (path.length < 5) return false;
-            const validZone = validZones[zone];
 
-            let insideCount = 0;
-            for (let p of path) {
-                const relX = p.x / canvas.width;
-                const relY = p.y / canvas.height;
-                if (relX >= validZone.x && relX <= validZone.x + validZone.width &&
-                    relY >= validZone.y && relY <= validZone.y + validZone.height) {
-                    insideCount++;
-                }
-            }
-            // Requiere que al menos el 80% del trazo esté dentro de la zona
-            return (insideCount / path.length) > 0.8;
+            // Calcular el centro del trazo
+            let sumX = 0, sumY = 0;
+            path.forEach(p => {
+                sumX += p.x;
+                sumY += p.y;
+            });
+            const centerX = sumX / path.length;
+            const centerY = sumY / path.length;
+
+            // Convertir a coordenadas relativas
+            const relX = centerX / canvas.width;
+            const relY = centerY / canvas.height;
+
+            // Verificar si está en la zona válida
+            const validZone = validZones[zone];
+            return (
+                relX >= validZone.x &&
+                relX <= validZone.x + validZone.width &&
+                relY >= validZone.y &&
+                relY <= validZone.y + validZone.height
+            );
         }
 
         function zoomIn(pageNum) {
