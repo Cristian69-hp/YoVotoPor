@@ -439,11 +439,27 @@
         }
 
         function descargarImagen(canvas, filename) {
-                canvas.toBlob(function(blob) {
-                    const url = URL.createObjectURL(blob);
-                    window.open(url, '_blank');
-                }, 'image/jpeg', 1.0);
-            }
+    const esInstagram = /Instagram/i.test(navigator.userAgent);
+
+    if (!esInstagram) {
+        // Descarga directa (Chrome, Safari, etc)
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/jpeg', 1.0);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else {
+        // Instagram: abrir imagen para guardar manual
+        canvas.toBlob(function(blob) {
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+
+            alert("📲 Estás en Instagram.\nMantén presionada la imagen y toca: Guardar imagen");
+        }, 'image/jpeg', 1.0);
+    }
+}
+
     </script>
 </body>
 
