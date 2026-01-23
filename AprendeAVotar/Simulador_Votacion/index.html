@@ -122,24 +122,19 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
+            /* Disable native scrolling */
             cursor: crosshair;
             display: flex;
             align-items: center;
             justify-content: center;
             touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
+            /* Crucial for preventing default touch behaviors */
         }
 
-        .svg-wrapper img {
+        #svgImage {
             display: block;
             transition: transform 0.3s ease;
             max-width: none;
-            pointer-events: none;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
         }
 
         #drawCanvas {
@@ -149,8 +144,6 @@
             pointer-events: auto;
             z-index: 10;
             touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
         }
 
         /* Header Instruction */
@@ -390,32 +383,35 @@
 
     <script>
         let currentPage = 1;
-        let scales = { 2: 0.7, 3: 0.7 };
+        let scales = { 2: 0.7, 3: 0.7 }; // Escalas iniciales
         let isDrawing = false;
         let currentPath = [];
         let initialPinchDistance = null;
         let initialScale = 1;
-        let isValidDrawing = false;
-        let lastErrorTime = 0;
-        let touchIdentifier = null;
 
+        // Ajustes de zonas para archivo.svg (proporciones relativas)
+        // Partido de la U: logo arriba a la izquierda
+        // Número 104: Raúl Machado
         const validZones = {
-            party: { x: 0.05, y: 0.38, width: 0.15, height: 0.12 },
-            number: { x: 0.17, y: 0.42, width: 0.13, height: 0.08 }
+            party: { x: 0.05, y: 0.38, width: 0.15, height: 0.12 }, // Zona Partido de la U
+            number: { x: 0.17, y: 0.42, width: 0.13, height: 0.08 }   // Zona Número 104
         };
 
         function initializePage(pageNum) {
             const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
 
             svgImage.onload = function () {
                 setupCanvas(pageNum);
                 setupDrawing(pageNum);
             };
 
+            // Si la imagen ya está cargada
             if (svgImage.complete) {
                 setupCanvas(pageNum);
                 setupDrawing(pageNum);
-                updateZoom(pageNum);
+                updateZoom(pageNum); // Apply initial 70% zoom
             }
         }
 
@@ -428,6 +424,7 @@
             drawCanvas.width = rect.width;
             drawCanvas.height = rect.height;
 
+            // Posicionar canvas sobre la imagen
             drawCanvas.style.position = 'absolute';
             drawCanvas.style.left = rect.left - wrapper.getBoundingClientRect().left + wrapper.scrollLeft + 'px';
             drawCanvas.style.top = rect.top - wrapper.getBoundingClientRect().top + wrapper.scrollTop + 'px';
@@ -439,104 +436,70 @@
             const ctx = drawCanvas.getContext('2d');
 
             ctx.strokeStyle = 'black';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2; // Linea negra delgada pero visible
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
             function startDrawing(e) {
+                // Si es un evento de mouse real o un toque de un solo dedo
                 isDrawing = true;
-                isValidDrawing = true;
                 currentPath = [];
-                const pos = getMousePos(drawCanvas, e);
+                const pos = getMousePos(wrapper, drawCanvas, e);
                 currentPath.push(pos);
-
-                validateCurrentPosition(pos, drawCanvas, pageNum);
-
                 ctx.beginPath();
                 ctx.moveTo(pos.x, pos.y);
             }
 
             function draw(e) {
                 if (!isDrawing) return;
-                const pos = getMousePos(drawCanvas, e);
+                const pos = getMousePos(wrapper, drawCanvas, e);
                 currentPath.push(pos);
-
-                validateCurrentPosition(pos, drawCanvas, pageNum);
-
-                if (isValidDrawing) {
-                    ctx.lineTo(pos.x, pos.y);
-                    ctx.stroke();
-                }
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
             }
 
             function stopDrawing() {
                 if (!isDrawing) return;
                 isDrawing = false;
-                touchIdentifier = null;
 
-                if (isValidDrawing && currentPath.length > 5) {
-                    if (pageNum === 2) {
-                        setTimeout(() => {
-                            showSuccessMessage("¡Correcto! Continuando al paso 2...");
-                            setTimeout(() => goToPage(3), 800);
-                        }, 300);
+                // Validar automáticamente al soltar
+                if (currentPath.length > 3) {
+                    const zoneKey = pageNum === 2 ? 'party' : 'number';
+                    if (isXInValidZone(currentPath, drawCanvas, zoneKey)) {
+                        if (pageNum === 2) {
+                            setTimeout(() => goToPage(3), 500);
+                        } else {
+                            setTimeout(() => {
+                                document.getElementById('toast').textContent = "¡Felicidades! Lo lograste.";
+                                document.getElementById('toast').style.background = "#22c55e";
+                                showToast();
+                                setTimeout(() => goToPage(4), 1000);
+                            }, 500);
+                        }
                     } else {
+                        showToast();
                         setTimeout(() => {
-                            showSuccessMessage("¡Felicidades! Has completado el proceso correctamente.");
-                            setTimeout(() => goToPage(4), 1000);
-                        }, 300);
+                            ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+                        }, 800);
                     }
-                } else if (currentPath.length > 3) {
-                    setTimeout(() => {
-                        ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-                    }, 500);
                 }
-
                 currentPath = [];
             }
 
-            function validateCurrentPosition(pos, canvas, pageNum) {
-                const relX = pos.x / canvas.width;
-                const relY = pos.y / canvas.height;
-
-                const zoneKey = pageNum === 2 ? 'party' : 'number';
-                const validZone = validZones[zoneKey];
-
-                const isInZone = (
-                    relX >= validZone.x &&
-                    relX <= validZone.x + validZone.width &&
-                    relY >= validZone.y &&
-                    relY <= validZone.y + validZone.height
-                );
-
-                if (!isInZone && isValidDrawing) {
-                    isValidDrawing = false;
-                    const now = Date.now();
-                    if (now - lastErrorTime > 2000) {
-                        lastErrorTime = now;
-                        showErrorToast();
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        isDrawing = false;
-                        currentPath = [];
-                    }
-                }
-            }
-
+            // Mouse events (for desktop testing)
             drawCanvas.addEventListener('mousedown', startDrawing);
             drawCanvas.addEventListener('mousemove', draw);
             drawCanvas.addEventListener('mouseup', stopDrawing);
             drawCanvas.addEventListener('mouseleave', stopDrawing);
 
+            // Touch events
             drawCanvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
+                e.preventDefault(); // Prevent scrolling/zoom default browser behavior
                 if (e.touches.length === 1) {
-                    touchIdentifier = e.touches[0].identifier;
                     startDrawing(e.touches[0]);
                 } else if (e.touches.length === 2) {
+                    // Start Pinch Zoom
                     isDrawing = false;
-                    touchIdentifier = null;
                     initialPinchDistance = Math.hypot(
                         e.touches[0].pageX - e.touches[1].pageX,
                         e.touches[0].pageY - e.touches[1].pageY
@@ -547,14 +510,10 @@
 
             drawCanvas.addEventListener('touchmove', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
-
-                if (e.touches.length === 1 && isDrawing && touchIdentifier !== null) {
-                    const touch = Array.from(e.touches).find(t => t.identifier === touchIdentifier);
-                    if (touch) {
-                        draw(touch);
-                    }
+                if (e.touches.length === 1 && isDrawing) {
+                    draw(e.touches[0]);
                 } else if (e.touches.length === 2 && initialPinchDistance) {
+                    // Handle Pinch Zoom
                     const currentDistance = Math.hypot(
                         e.touches[0].pageX - e.touches[1].pageX,
                         e.touches[0].pageY - e.touches[1].pageY
@@ -567,31 +526,17 @@
 
             drawCanvas.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
-
                 if (e.touches.length === 0) {
                     if (isDrawing) stopDrawing();
                     initialPinchDistance = null;
-                    touchIdentifier = null;
-                } else if (e.touches.length === 1 && initialPinchDistance) {
-                    initialPinchDistance = null;
                 }
             }, { passive: false });
-
-            drawCanvas.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                isDrawing = false;
-                initialPinchDistance = null;
-                touchIdentifier = null;
-            }, { passive: false });
-
-            wrapper.addEventListener('gesturestart', (e) => e.preventDefault());
-            wrapper.addEventListener('gesturechange', (e) => e.preventDefault());
-            wrapper.addEventListener('gestureend', (e) => e.preventDefault());
         }
 
-        function getMousePos(canvas, e) {
+        function getMousePos(wrapper, canvas, e) {
             const rect = canvas.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
 
@@ -599,6 +544,32 @@
                 x: clientX - rect.left,
                 y: clientY - rect.top
             };
+        }
+
+        function isXInValidZone(path, canvas, zone) {
+            if (path.length < 5) return false;
+
+            // Calcular el centro del trazo
+            let sumX = 0, sumY = 0;
+            path.forEach(p => {
+                sumX += p.x;
+                sumY += p.y;
+            });
+            const centerX = sumX / path.length;
+            const centerY = sumY / path.length;
+
+            // Convertir a coordenadas relativas
+            const relX = centerX / canvas.width;
+            const relY = centerY / canvas.height;
+
+            // Verificar si está en la zona válida
+            const validZone = validZones[zone];
+            return (
+                relX >= validZone.x &&
+                relX <= validZone.x + validZone.width &&
+                relY >= validZone.y &&
+                relY <= validZone.y + validZone.height
+            );
         }
 
         function zoomIn(pageNum) {
@@ -619,6 +590,7 @@
             document.getElementById(`zoomLevel${pageNum}`).textContent = `${zoomPercent}%`;
             svgImage.style.transform = `scale(${scale})`;
 
+            // Actualizar canvas después del zoom
             setTimeout(() => setupCanvas(pageNum), 70);
         }
 
@@ -633,20 +605,8 @@
             }
         }
 
-        function showErrorToast() {
+        function showToast() {
             const toast = document.getElementById('toast');
-            toast.textContent = "¡Marca en el lugar correcto! Inténtalo de nuevo.";
-            toast.style.background = "#ef4444";
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2500);
-        }
-
-        function showSuccessMessage(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.style.background = "#22c55e";
             toast.classList.add('show');
             setTimeout(() => {
                 toast.classList.remove('show');
@@ -655,9 +615,6 @@
 
         function restart() {
             scales = { 2: 0.7, 3: 0.7 };
-            isValidDrawing = false;
-            lastErrorTime = 0;
-            touchIdentifier = null;
             document.querySelectorAll('canvas').forEach(c => {
                 const ctx = c.getContext('2d');
                 ctx.clearRect(0, 0, c.width, c.height);
