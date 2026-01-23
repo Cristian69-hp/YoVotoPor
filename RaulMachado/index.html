@@ -242,6 +242,89 @@
             font-size: 14px;
             letter-spacing: 1px;
         }
+
+        /* Overlay de Instrucciones */
+        .instructions-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .instructions-content {
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .floating-instruction {
+            background: #FF5722;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(255, 87, 34, 0.4);
+            animation: float 2s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .preview-download-img {
+            width: 100%;
+            border-radius: 15px;
+            border: 4px solid white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background: white;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #e0e0e0;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 
@@ -347,6 +430,17 @@
         </div>
     </div>
 
+    <!-- Overlay de Instrucciones -->
+    <div id="instructionsOverlay" class="instructions-overlay">
+        <div class="instructions-content">
+            <div class="floating-instruction">
+                MANTENER PRESIONADO Y DESCARGAR IMAGEN
+            </div>
+            <img id="previewImage" src="" alt="Vista previa" class="preview-download-img">
+            <button class="close-btn" onclick="cerrarOverlay()">VOLVER</button>
+        </div>
+    </div>
+
     <script>
         const nombreInput = document.getElementById('nombre');
         const canvas1 = document.getElementById('canvas1');
@@ -439,11 +533,21 @@
         }
 
         function descargarImagen(canvas, filename) {
-                canvas.toBlob(function(blob) {
-                    const url = URL.createObjectURL(blob);
-                    window.open(url, '_blank');
-                }, 'image/jpeg', 1.0);
-            }
+            canvas.toBlob(function (blob) {
+                const url = URL.createObjectURL(blob);
+                const overlay = document.getElementById('instructionsOverlay');
+                const previewImg = document.getElementById('previewImage');
+
+                previewImg.src = url;
+                overlay.style.display = 'flex';
+
+                // No liberar el URL inmediatamente para que el usuario pueda descargar
+            }, 'image/jpeg', 1.0);
+        }
+
+        function cerrarOverlay() {
+            document.getElementById('instructionsOverlay').style.display = 'none';
+        }
     </script>
 </body>
 
