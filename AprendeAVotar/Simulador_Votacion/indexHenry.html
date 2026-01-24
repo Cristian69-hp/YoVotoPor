@@ -433,8 +433,8 @@
 
         // Zonas de validación ajustadas para cubrir los campos del tarjetón
         const validZones = {
-            party: { x: 0.1, y: 0.25, width: 0.3, height: 0.25 }, // Área del logo y nombre del partido
-            number: { x: 0.40, y: 0.38, width: 0.08, height: 0.08 }   // Área del número 104
+            party: { x: 0.1, y: 0.65, width: 0.3, height: 0.25 }, // Área del logo y nombre del partido
+            number: { x: 0.30, y: 0.75, width: 0.08, height: 0.08 }   // Área del número 104
         };
 
         function initializePage(pageNum) {
@@ -689,7 +689,7 @@
             if (pageNum === 2 || pageNum === 3) {
                 // Forzar escala inicial si es necesario
                 if (pageNum === 2) scales[2] = 0.5;
-                if (pageNum === 3) scales[3] = 0.5;
+                if (pageNum === 3) scales[3] = 1.1;
 
                 initializePage(pageNum);
 
@@ -703,8 +703,8 @@
 
                         if (wrapper && svgImage) {
                             // Punto de enfoque relativo (0.26 para Paso 2, 0.5 para el resto)
-                            const focusX = pageNum === 3 ? 0.15 : 0.5;
-                            const focusY = pageNum === 3 ? 0.36 : 0.5;
+                            const focusX = pageNum === 3 ? 0.29 : 0.5;
+                            const focusY = pageNum === 3 ? 0.76 : 0.5;
 
                             const targetX = svgImage.offsetLeft + (svgImage.offsetWidth * focusX);
                             const targetY = svgImage.offsetTop + (svgImage.offsetHeight * focusY);
