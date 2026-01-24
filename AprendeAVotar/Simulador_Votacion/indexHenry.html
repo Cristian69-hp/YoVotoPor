@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprende a Votar - Raúl Machado</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-orange: #2563eb;
+            --primary-dark: #1e40af;
+            --bg-color: #0f172a;
+            --paper-color: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--paper-color);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Pages */
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            display: none;
+            flex-direction: column;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        /* Welcome Page */
+        #page1 {
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+                url('https://i.ibb.co/fVHzMmSC/Raul-Machado-IMG.jpg') center/cover no-repeat;
+            color: white;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 600px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 5rem;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+            line-height: 0.9;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 20px 60px;
+            background: var(--primary-orange);
+            color: white;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+            letter-spacing: 2px;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.6);
+        }
+
+        .step-tag {
+            background: rgba(255, 107, 53, 0.1);
+            color: var(--primary-orange);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: inline-block;
+        }
+
+        /* SVG Voting Container */
+        .svg-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+
+        .svg-wrapper {
+            position: relative;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            cursor: crosshair;
+            touch-action: pan-x pan-y pinch-zoom;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-overflow-scrolling: touch;
+            padding: 0;
+        }
+
+        .svg-wrapper img {
+            display: block;
+            transition: transform 0.3s ease;
+            max-width: none;
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            transform-origin: center center;
+            margin: 100vh 100vw;
+        }
+
+        #drawCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: auto;
+            z-index: 10;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Header Instruction */
+        .instruction-header {
+            position: absolute;
+            top: 1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 10px;
+            border-radius: 24px;
+            z-index: 100;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .instruction-header .step-tag {
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+        }
+
+        .instruction-header h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: var(--primary-orange);
+            line-height: 1;
+            letter-spacing: 1px;
+        }
+
+        .instruction-header p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .instruction-header p b {
+            color: var(--primary-orange);
+            font-weight: 700;
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .zoom-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            background: var(--primary-orange);
+            color: white;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .zoom-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        .zoom-level {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--text-main);
+            min-width: 60px;
+        }
+
+        /* Success Page */
+        #page4 {
+            background: white;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .success-icon {
+            width: 150px;
+            height: 150px;
+            background: #22c55e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            color: white;
+            font-size: 5rem;
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #ef4444;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s ease;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background: #22c55e;
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.4);
+        }
+
+        .toast.error {
+            background: #ef4444;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+
+            .instruction-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .instruction-header p {
+                font-size: 0.9rem;
+            }
+
+            .zoom-controls {
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .zoom-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- PAGE 1: Welcome -->
+    <div class="page active" id="page1">
+        <div class="welcome-card">
+            <div class="step-tag" style="background: rgba(255,255,255,0.2); color: white;">Simulador Electoral</div>
+            <h1>HENRY RIAÑO</h1>
+            <p style="font-size: 1.5rem; margin-bottom: 30px; opacity: 0.9;">¿Quieres aprender a votar por Henry Riaño?
+            </p>
+            <button class="btn" onclick="goToPage(2)">INICIAR A VOTAR</button>
+        </div>
+    </div>
+
+    <!-- PAGE 2: Party Selection (SVG) -->
+    <div class="page" id="page2">
+        <div class="instruction-header">
+            <div class="step-tag" style="background: white; color: var(--primary-orange);">Paso 01</div>
+            <h2>MARCA EL PARTIDO CONSERVADOR</h2>
+            <p>Dibuja una <b>X</b> sobre el logo del Partido Conservador en el tarjetón</p>
+        </div>
+
+        <div class="svg-container">
+            <div class="svg-wrapper" id="svgWrapper2">
+                <img id="svgImage2" src="SVG/TarjetonSantander.svg" alt="Tarjetón Electoral">
+                <canvas id="drawCanvas2"></canvas>
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomOut(2)">-</button>
+                <div class="zoom-level" id="zoomLevel2">60%</div>
+                <button class="zoom-btn" onclick="zoomIn(2)">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 3: Number Selection (SVG with Zoom) -->
+    <div class="page" id="page3">
+        <div class="instruction-header">
+            <div class="step-tag" style="background: white; color: var(--primary-orange);">Paso 02</div>
+            <h2>MARCA EL NÚMERO 104</h2>
+            <p>Dibuja una <b>X</b> sobre el número 104 de Henry Riaño</p>
+        </div>
+
+        <div class="svg-container">
+            <div class="svg-wrapper" id="svgWrapper3">
+                <img id="svgImage3" src="SVG/TarjetonSantander.svg" alt="Tarjetón Electoral">
+                <canvas id="drawCanvas3"></canvas>
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomOut(3)">-</button>
+                <div class="zoom-level" id="zoomLevel3">280%</div>
+                <button class="zoom-btn" onclick="zoomIn(3)">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 4: Success -->
+    <div class="page" id="page4">
+        <div class="success-icon">✓</div>
+        <h1 style="color: var(--primary-orange);">¡PROCESO EXITOSO!</h1>
+        <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; max-width: 500px;">
+            Has aprendido correctamente cómo votar por <b>Henry Riaño</b>. ¡Gracias por participar!
+        </p>
+
+        <div
+            style="background: #fff7ed; padding: 30px; border-radius: 20px; border: 2px dashed var(--primary-orange); margin-bottom: 40px;">
+            <p style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--primary-orange);">
+                104 - PARTIDO CONSERVADOR
+            </p>
+        </div>
+
+        <button class="btn" onclick="restart()">VOLVER A PRACTICAR</button>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="toast" class="toast">¡Marca en el lugar correcto! Inténtalo de nuevo.</div>
+
+    <script>
+
+        let currentPage = 1;
+        let scales = { 2: 0.5, 3: 0.5 };
+        let isDrawing = false;
+        let currentPath = [];
+        let initialPinchDistance = null;
+        let initialScale = 1;
+        let isValidDrawing = false;
+        let touchIdentifier = null;
+        let globalPaths = { 2: [], 3: [] };
+
+        // Zonas de validación ajustadas para cubrir los campos del tarjetón
+        const validZones = {
+            party: { x: 0.1, y: 0.25, width: 0.3, height: 0.25 }, // Área del logo y nombre del partido
+            number: { x: 0.40, y: 0.38, width: 0.08, height: 0.08 }   // Área del número 104
+        };
+
+        function initializePage(pageNum) {
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+
+            svgImage.onload = function () {
+                setupCanvas(pageNum);
+                setupDrawing(pageNum);
+            };
+
+            // Si la imagen ya está cargada
+            if (svgImage.complete) {
+                setupCanvas(pageNum);
+                setupDrawing(pageNum);
+                updateZoom(pageNum);
+            }
+        }
+
+        function setupCanvas(pageNum) {
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+
+            // Usamos requestAnimationFrame para asegurar que el navegador ya calculó el zoom
+            requestAnimationFrame(() => {
+                const imgRect = svgImage.getBoundingClientRect();
+                const wrapperRect = wrapper.getBoundingClientRect();
+
+                drawCanvas.width = imgRect.width;
+                drawCanvas.height = imgRect.height;
+
+                drawCanvas.style.position = 'absolute';
+                drawCanvas.style.left = (imgRect.left - wrapperRect.left + wrapper.scrollLeft) + 'px';
+                drawCanvas.style.top = (imgRect.top - wrapperRect.top + wrapper.scrollTop) + 'px';
+
+                redrawGlobalPaths(pageNum);
+            });
+        }
+
+        function setupDrawing(pageNum) {
+            const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            const ctx = drawCanvas.getContext('2d');
+
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Verificar si ya existen los event listeners para no duplicarlos
+            if (!drawCanvas.dataset.listenersAdded) {
+                let allPaths = []; // Almacenar todas las líneas dibujadas
+
+                function startDrawing(e) {
+                    isDrawing = true;
+                    isValidDrawing = true;
+                    currentPath = [];
+                    const pos = getMousePos(wrapper, drawCanvas, e);
+                    currentPath.push(pos);
+
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y);
+                }
+
+                function draw(e) {
+                    if (!isDrawing) return;
+                    const pos = getMousePos(wrapper, drawCanvas, e);
+                    currentPath.push(pos);
+
+                    if (isValidDrawing) {
+                        ctx.lineTo(pos.x, pos.y);
+                        ctx.stroke();
+                    }
+                }
+
+                function stopDrawing() {
+                    if (!isDrawing) return;
+                    isDrawing = false;
+                    touchIdentifier = null;
+
+                    if (currentPath.length > 5) {
+                        allPaths.push([...currentPath]);
+
+                        const zone = pageNum === 2 ? 'party' : 'number';
+
+                        // Validar si la línea actual está en la zona correcta
+                        if (!isXInValidZone(currentPath, drawCanvas, zone)) {
+                            showToast('¡Error! Inténtalo de nuevo.', 'error');
+
+                            // CORRECCIÓN AQUÍ:
+                            setTimeout(() => {
+                                // En lugar de solo borrar, borramos y REDIBUJAMOS lo persistente
+                                allPaths = [];
+                                redrawGlobalPaths(pageNum);
+                            }, 1000);
+
+                        } else if (allPaths.length >= 2) {
+                            const isValid = allPaths.every(path => isXInValidZone(path, drawCanvas, zone));
+
+                            if (isValid) {
+                                // Guardar trazos aprobados en el cajón de la página actual
+                                allPaths.forEach(path => {
+                                    globalPaths[pageNum].push(path.map(p => ({
+                                        relX: p.x / drawCanvas.width,
+                                        relY: p.y / drawCanvas.height
+                                    })));
+                                });
+
+                                showToast('¡Aprobado!', 'success');
+                                setTimeout(() => {
+                                    allPaths = [];
+                                    if (pageNum === 2) {
+                                        goToPage(3);
+                                    } else {
+                                        goToPage(4);
+                                    }
+                                }, 500);
+                            }
+                        }
+                    }
+                    currentPath = [];
+                }
+
+                // Función para limpiar allPaths desde fuera
+                drawCanvas.clearPaths = function () {
+                    allPaths = [];
+                };
+
+                // Mouse events
+                drawCanvas.addEventListener('mousedown', startDrawing);
+                drawCanvas.addEventListener('mousemove', draw);
+                drawCanvas.addEventListener('mouseup', stopDrawing);
+                drawCanvas.addEventListener('mouseleave', stopDrawing);
+
+                // Touch events - Zoom con 2 dedos, dibujo con 1
+                drawCanvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (e.touches.length === 1) {
+                        touchIdentifier = e.touches[0].identifier;
+                        startDrawing(e.touches[0]);
+                    } else if (e.touches.length === 2) {
+                        isDrawing = false;
+                        touchIdentifier = null;
+                        initialPinchDistance = Math.hypot(
+                            e.touches[0].pageX - e.touches[1].pageX,
+                            e.touches[0].pageY - e.touches[1].pageY
+                        );
+                        initialScale = scales[pageNum];
+                    }
+                }, { passive: false });
+
+                drawCanvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    if (e.touches.length === 1 && isDrawing && touchIdentifier !== null) {
+                        const touch = Array.from(e.touches).find(t => t.identifier === touchIdentifier);
+                        if (touch) draw(touch);
+                    } else if (e.touches.length === 2 && initialPinchDistance) {
+                        const currentDistance = Math.hypot(
+                            e.touches[0].pageX - e.touches[1].pageX,
+                            e.touches[0].pageY - e.touches[1].pageY
+                        );
+                        const zoomFactor = currentDistance / initialPinchDistance;
+                        scales[pageNum] = Math.min(Math.max(initialScale * zoomFactor, 0.5), 4);
+                        updateZoom(pageNum);
+                    }
+                }, { passive: false });
+
+                drawCanvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    if (e.touches.length === 0) {
+                        if (isDrawing) stopDrawing();
+                        initialPinchDistance = null;
+                        touchIdentifier = null;
+                    } else if (e.touches.length === 1 && initialPinchDistance) {
+                        initialPinchDistance = null;
+                    }
+                }, { passive: false });
+
+                drawCanvas.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    isDrawing = false;
+                    initialPinchDistance = null;
+                    touchIdentifier = null;
+                }, { passive: false });
+
+                drawCanvas.dataset.listenersAdded = 'true';
+            }
+        }
+
+        function getMousePos(wrapper, canvas, e) {
+            const rect = canvas.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function isXInValidZone(path, canvas, zone) {
+            if (path.length < 5) return false;
+            const validZone = validZones[zone];
+
+            let insideCount = 0;
+            for (let p of path) {
+                const relX = p.x / canvas.width;
+                const relY = p.y / canvas.height;
+                if (relX >= validZone.x && relX <= validZone.x + validZone.width &&
+                    relY >= validZone.y && relY <= validZone.y + validZone.height) {
+                    insideCount++;
+                }
+            }
+            // Aprobado si el 80% del trazo está dentro del campo de la imagen
+            return (insideCount / path.length) > 0.8;
+        }
+
+        function zoomIn(pageNum) {
+            scales[pageNum] = Math.min(scales[pageNum] + 0.3, 4);
+            updateZoom(pageNum);
+        }
+
+        function zoomOut(pageNum) {
+            scales[pageNum] = Math.max(scales[pageNum] - 0.3, 0.5);
+            updateZoom(pageNum);
+        }
+
+        function updateZoom(pageNum) {
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const scale = scales[pageNum];
+            const zoomPercent = Math.round(scale * 100);
+
+            document.getElementById(`zoomLevel${pageNum}`).textContent = `${zoomPercent}%`;
+            svgImage.style.transform = `scale(${scale})`;
+
+            // Actualizar canvas después del zoom
+            setTimeout(() => {
+                setupCanvas(pageNum);
+                redrawGlobalPaths(pageNum);
+            }, 70);
+        }
+
+        function goToPage(pageNum) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page${pageNum}`).classList.add('active');
+            currentPage = pageNum;
+
+            if (pageNum === 2 || pageNum === 3) {
+                // Forzar escala inicial si es necesario
+                if (pageNum === 2) scales[2] = 0.5;
+                if (pageNum === 3) scales[3] = 0.5;
+
+                initializePage(pageNum);
+
+                setTimeout(() => {
+                    updateZoom(pageNum);
+
+                    // Esperar un poco más a que el layout se estabilice con el nuevo zoom
+                    setTimeout(() => {
+                        const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+                        const svgImage = document.getElementById(`svgImage${pageNum}`);
+
+                        if (wrapper && svgImage) {
+                            // Punto de enfoque relativo (0.26 para Paso 2, 0.5 para el resto)
+                            const focusX = pageNum === 3 ? 0.15 : 0.5;
+                            const focusY = pageNum === 3 ? 0.36 : 0.5;
+
+                            const targetX = svgImage.offsetLeft + (svgImage.offsetWidth * focusX);
+                            const targetY = svgImage.offsetTop + (svgImage.offsetHeight * focusY);
+
+                            wrapper.scrollLeft = targetX - (wrapper.clientWidth / 2);
+                            wrapper.scrollTop = targetY - (wrapper.clientHeight / 2);
+                        }
+                    }, 400); // Delay aumentado para mayor estabilidad
+                }, 50);
+            }
+        }
+
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        function redrawGlobalPaths(pageNum) {
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            if (!drawCanvas) return;
+            const ctx = drawCanvas.getContext('2d');
+
+            ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+
+            // Dibujamos los trazos de TODAS las páginas anteriores y la actual
+            for (let p = 2; p <= pageNum; p++) {
+                if (!globalPaths[p]) continue;
+
+                globalPaths[p].forEach(path => {
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+
+                    ctx.moveTo(path[0].relX * drawCanvas.width, path[0].relY * drawCanvas.height);
+                    for (let i = 1; i < path.length; i++) {
+                        ctx.lineTo(path[i].relX * drawCanvas.width, path[i].relY * drawCanvas.height);
+                    }
+                    ctx.stroke();
+                });
+            }
+        }
+
+        function restart() {
+            scales = { 2: 0.5, 3: 0.5 };
+            globalPaths = { 2: [], 3: [] }; // Resetear ambos cajones
+
+            // Limpiar canvas y resetear allPaths
+            document.querySelectorAll('canvas').forEach(c => {
+                const ctx = c.getContext('2d');
+                ctx.clearRect(0, 0, c.width, c.height);
+
+                // Resetear allPaths si existe la función
+                if (c.clearPaths) {
+                    c.clearPaths();
+                }
+            });
+
+            goToPage(1);
+        }
+    </script>
+</body>
+
+</html>

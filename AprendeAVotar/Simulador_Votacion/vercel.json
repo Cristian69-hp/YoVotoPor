@@ -3,6 +3,10 @@
         {
             "source": "/Aprende-a-votar-raul-machado",
             "destination": "/RaulMachado/index.html"
+        },
+        {
+            "source": "/Aprende-a-votar-Henry-Riano",
+            "destination": "/HenryRiano/indexHenry.html"
         }
     ]
 }
