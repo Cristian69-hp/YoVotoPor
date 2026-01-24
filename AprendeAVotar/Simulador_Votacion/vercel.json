@@ -2,11 +2,11 @@
     "rewrites": [
         {
             "source": "/AprendeAVotar/Simulador_Votacion/raul-machado",
-            "destination": "/Simulador_Votacion/index.html"
+            "destination": "/RaulMachado/index.html"
         },
         {
             "source": "/AprendeAVotar/Simulador_Votacion/henry-riano",
-            "destination": "/Simulador_Votacion/indexHenry.html"
+            "destination": "/HenryRiano/indexHenry.html"
         }
     ]
 }
