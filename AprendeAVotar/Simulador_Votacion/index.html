@@ -420,6 +420,7 @@
     <div id="toast" class="toast">¡Marca en el lugar correcto! Inténtalo de nuevo.</div>
 
     <script>
+
         let currentPage = 1;
         let scales = { 2: 0.7, 3: 0.7 };
         let isDrawing = false;
@@ -428,6 +429,7 @@
         let initialScale = 1;
         let isValidDrawing = false;
         let touchIdentifier = null;
+        let globalPaths = [];
 
         // Zonas de validación ajustadas para cubrir los campos del tarjetón
         const validZones = {
@@ -527,6 +529,14 @@
                             const isValid = allPaths.every(path => isXInValidZone(path, drawCanvas, zone));
 
                             if (isValid) {
+                                // Guardar trazos aprobados globalmente para persistencia
+                                allPaths.forEach(path => {
+                                    globalPaths.push(path.map(p => ({
+                                        relX: p.x / drawCanvas.width,
+                                        relY: p.y / drawCanvas.height
+                                    })));
+                                });
+
                                 showToast('¡Aprobado!', 'success');
                                 setTimeout(() => {
                                     allPaths = []; // Limpiar para el próximo intento
@@ -657,7 +667,10 @@
             svgImage.style.transform = `scale(${scale})`;
 
             // Actualizar canvas después del zoom
-            setTimeout(() => setupCanvas(pageNum), 70);
+            setTimeout(() => {
+                setupCanvas(pageNum);
+                redrawGlobalPaths(pageNum);
+            }, 70);
         }
 
         function goToPage(pageNum) {
@@ -705,8 +718,33 @@
             }, 2500);
         }
 
+        function redrawGlobalPaths(pageNum) {
+            const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
+            if (!drawCanvas) return;
+            const ctx = drawCanvas.getContext('2d');
+
+            globalPaths.forEach(path => {
+                if (path.length < 2) return;
+                ctx.beginPath();
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                const startPos = path[0];
+                ctx.moveTo(startPos.relX * drawCanvas.width, startPos.relY * drawCanvas.height);
+
+                for (let i = 1; i < path.length; i++) {
+                    const pos = path[i];
+                    ctx.lineTo(pos.relX * drawCanvas.width, pos.relY * drawCanvas.height);
+                }
+                ctx.stroke();
+            });
+        }
+
         function restart() {
             scales = { 2: 0.7, 3: 0.7 };
+            globalPaths = []; // Limpiar trazos globales
 
             // Limpiar canvas y resetear allPaths
             document.querySelectorAll('canvas').forEach(c => {
