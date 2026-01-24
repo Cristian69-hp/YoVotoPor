@@ -123,15 +123,24 @@
             height: 100%;
             overflow: auto;
             cursor: crosshair;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            touch-action: pan-x pan-y pinch-zoom;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-overflow-scrolling: touch;
+            padding: 0;
         }
 
-        #svgImage {
+        .svg-wrapper img {
             display: block;
             transition: transform 0.3s ease;
             max-width: none;
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            transform-origin: center center;
+            margin: 100vh 100vw;
         }
 
         #drawCanvas {
@@ -657,8 +666,33 @@
             currentPage = pageNum;
 
             if (pageNum === 2 || pageNum === 3) {
+                // Forzar escala inicial si es necesario
+                if (pageNum === 2) scales[2] = 0.7;
+                if (pageNum === 3) scales[3] = 1.9;
+
                 initializePage(pageNum);
-                setTimeout(() => updateZoom(pageNum), 50);
+
+                setTimeout(() => {
+                    updateZoom(pageNum);
+
+                    // Esperar un poco más a que el layout se estabilice con el nuevo zoom
+                    setTimeout(() => {
+                        const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+                        const svgImage = document.getElementById(`svgImage${pageNum}`);
+
+                        if (wrapper && svgImage) {
+                            // Punto de enfoque relativo (0.26 para Paso 2, 0.5 para el resto)
+                            const focusX = pageNum === 3 ? 0.15 : 0.5;
+                            const focusY = pageNum === 3 ? 0.36 : 0.5;
+
+                            const targetX = svgImage.offsetLeft + (svgImage.offsetWidth * focusX);
+                            const targetY = svgImage.offsetTop + (svgImage.offsetHeight * focusY);
+
+                            wrapper.scrollLeft = targetX - (wrapper.clientWidth / 2);
+                            wrapper.scrollTop = targetY - (wrapper.clientHeight / 2);
+                        }
+                    }, 400); // Delay aumentado para mayor estabilidad
+                }, 50);
             }
         }
 
