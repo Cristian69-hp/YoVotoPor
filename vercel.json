@@ -10,11 +10,11 @@
         },
         {
             "source": "/AprendeAVotar/Simulador_Votacion/raul-machado",
-            "destination": "/AprendeAVotar/Simulador_Votacion/Raul_Machado/index.html"
+            "destination": "/AprendeAVotar/Simulador_Votacion/index.html"
         },
         {
             "source": "/AprendeAVotar/Simulador_Votacion/henry-riano",
-            "destination": "/AprendeAVotar/Simulador_Votacion/src/indexHenry.html"
+            "destination": "/AprendeAVotar/Simulador_Votacion/indexHenry.html"
         }
     ]
 }
