@@ -48,16 +48,11 @@
         /* Welcome Page */
         #page1 {
             background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
-                url('https://i.ibb.co/chs8MZ6w/Post-RM-Cesar.png') no-repeat;
-            background-position: center;
-            background-size: 100% 100%;
+                url('https://i.ibb.co/chs8MZ6w/Post-RM-Cesar.png') center/cover no-repeat;
             color: white;
             justify-content: center;
             align-items: center;
             text-align: center;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
         }
 
         .welcome-card {
@@ -354,7 +349,9 @@
     <div class="page active" id="page1">
         <div class="welcome-card">
             <div class="step-tag" style="background: rgba(255,255,255,0.2); color: white;">Simulador Electoral</div>
-            <div style="height: 120px;"></div> <!-- Espaciador para no tapar el centro de la imagen -->
+            <h1>RAÚL MACHADO</h1>
+            <p style="font-size: 1.5rem; margin-bottom: 30px; opacity: 0.9;">¿Quieres aprender a votar por Raúl Machado?
+            </p>
             <button class="btn" onclick="goToPage(2)">INICIAR A VOTAR</button>
         </div>
     </div>
