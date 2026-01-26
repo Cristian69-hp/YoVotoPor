@@ -797,6 +797,10 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(`page${pageNum}`).classList.add('active');
             currentPage = pageNum;
+            if (pageNum === 4) {
+                registrarCompletado();
+            }
+
 
             if (pageNum === 2 || pageNum === 3) {
                 // Forzar escala inicial si es necesario
@@ -827,6 +831,26 @@
                     }, 400); // Delay aumentado para mayor estabilidad
                 }, 50);
             }
+        }
+
+        function registrarCompletado() {
+            const url = 'https://script.google.com/macros/s/AKfycbyFKk_26sS8TFXBmcTg9qDbHjv-QfN4IcWC87ihoAn-y9oEa0V5w2020YU_7bJMxwsG/exec';
+
+            const data = {
+                candidato: 'Raúl Machado',
+                partido: 'Partido de la U'
+            };
+
+            fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            }).catch(error => {
+                console.log('Registro enviado');
+            });
         }
 
         function showToast(message, type = 'error') {
