@@ -47,8 +47,12 @@
 
         /* Welcome Page */
         #page1 {
-            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
-                url('https://i.ibb.co/jkCdXLzd/Whats-App-Image-2026-02-04-at-8-41-22-AM.jpg') center/98% auto no-repeat;
+            background-color: #0a0b1e;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
+                url('https://i.ibb.co/jkCdXLzd/Whats-App-Image-2026-02-04-at-8-41-22-AM.jpg');
+            background-position: center;
+            background-size: 98% auto;
+            background-repeat: no-repeat;
             color: white;
             justify-content: center;
             align-items: center;
@@ -63,6 +67,8 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             max-width: 600px;
             animation: fadeInDown 1s ease-out;
+            margin-top: -120px;
+            /* Sube los textos */
         }
 
         h1 {
@@ -455,10 +461,10 @@
         <div class="welcome-card">
             <div class="step-tag" style="background: rgba(255,255,255,0.2); color: white;">Simulador Electoral</div>
             <h1>LAURA GALLEGO SOLÍS</h1>
-            <p style="font-size: 1.5rem; margin-bottom: 30px; opacity: 0.9;">¿Quieres aprender a votar por Laura
+            <p style="font-size: 1.5rem; margin-bottom: 80px; opacity: 0.9;">¿Quieres aprender a votar por Laura
                 Gallego Solís?
             </p>
-            <button class="btn" onclick="goToPage(2)">INICIAR A VOTAR</button>
+            <button class="btn" onclick="goToPage(2)" style="margin-top: 40px;">INICIAR A VOTAR</button>
         </div>
     </div>
 
