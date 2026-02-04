@@ -140,7 +140,7 @@
 
         .svg-wrapper img {
             display: block;
-            transition: transform 0.3s ease;
+            /* transition: transform 0.3s ease; */
             max-width: none;
             pointer-events: none;
             user-select: none;
@@ -822,12 +822,15 @@
                 setTimeout(() => {
                     updateZoom(pageNum);
 
-                    // Esperar un poco más a que el layout se estabilice con el nuevo zoom
+                    // Sincronización instantánea tras el cambio de zoom
                     setTimeout(() => {
                         const wrapper = document.getElementById(`svgWrapper${pageNum}`);
                         const svgImage = document.getElementById(`svgImage${pageNum}`);
 
                         if (wrapper && svgImage) {
+                            // Sincronizar canvas antes de centrar
+                            setupCanvas(pageNum);
+
                             // Transform-origin is at 80% 65%
                             const originX = 0.8;
                             const originY = 0.65;
@@ -844,7 +847,7 @@
                             wrapper.scrollLeft = visualX - (wrapper.clientWidth / 2);
                             wrapper.scrollTop = visualY - (wrapper.clientHeight / 2);
                         }
-                    }, 400); // Delay aumentado para mayor estabilidad
+                    }, 100); // Delay reducido ya que no hay transición CSS
                 }, 50);
             }
         }
