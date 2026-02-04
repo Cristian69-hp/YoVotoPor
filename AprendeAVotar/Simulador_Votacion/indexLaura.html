@@ -555,8 +555,8 @@
 
         // Zonas de validación ajustadas para cubrir los campos del tarjetón
         const validZones = {
-            party: { x: 0.45, y: 0.60, width: 0.50, height: 0.25 }, // Área expandida para la fila de la coalición
-            number: { x: 0.65, y: 0.65, width: 0.15, height: 0.10 }   // Área expandida para el número 106
+            party: { x: 0.35, y: 0.65, width: 0.3, height: 0.25 }, // Área del logo y nombre del partido
+            number: { x: 0.70, y: 0.69, width: 0.08, height: 0.03 }   // Área del número 104
         };
 
         function initializePage(pageNum) {
@@ -765,19 +765,17 @@
             if (path.length < 5) return false;
             const validZone = validZones[zone];
 
-            // Calcular el centroide (punto medio) de todos los puntos del trazo
-            const sumX = path.reduce((sum, p) => sum + (p.x || 0), 0);
-            const sumY = path.reduce((sum, p) => sum + (p.y || 0), 0);
-            const centroidX = sumX / path.length;
-            const centroidY = sumY / path.length;
-
-            const relX = centroidX / canvas.width;
-            const relY = centroidY / canvas.height;
-
-            // Retornar true si el centro de la X está dentro de la zona
-            // Se puede añadir un margen extra de tolerancia si es necesario
-            return (relX >= validZone.x && relX <= validZone.x + validZone.width &&
-                relY >= validZone.y && relY <= validZone.y + validZone.height);
+            let insideCount = 0;
+            for (let p of path) {
+                const relX = p.x / canvas.width;
+                const relY = p.y / canvas.height;
+                if (relX >= validZone.x && relX <= validZone.x + validZone.width &&
+                    relY >= validZone.y && relY <= validZone.y + validZone.height) {
+                    insideCount++;
+                }
+            }
+            // Aprobado si el 80% del trazo está dentro del campo de la imagen
+            return (insideCount / path.length) > 0.8;
         }
 
         function zoomIn(pageNum) {
