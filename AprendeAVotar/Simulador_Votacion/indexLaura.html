@@ -429,6 +429,35 @@
         }
 
         /* Mobile Responsive */
+        /* Guidance Arrows */
+        .guide-arrow {
+            position: absolute;
+            z-index: 50;
+            pointer-events: none;
+            width: 100px;
+            filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.8));
+            animation: arrowFloat 1.5s ease-in-out infinite;
+            display: none;
+        }
+
+        .guide-arrow.active {
+            display: block;
+        }
+
+        @keyframes arrowFloat {
+            0% {
+                transform: translate(0, 0) rotate(var(--rot, 0deg));
+            }
+
+            50% {
+                transform: translate(15px, -15px) rotate(var(--rot, 0deg));
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(var(--rot, 0deg));
+            }
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 3rem;
@@ -482,6 +511,13 @@
                 <img id="svgImage2" src="/AprendeAVotar/Simulador_Votacion/SVG/TarjetonAntioquia.svg"
                     alt="Tarjetón Electoral">
                 <canvas id="drawCanvas2"></canvas>
+                <div id="arrow2" class="guide-arrow" style="--rot: -45deg;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="19" y1="5" x2="5" y2="19"></line>
+                        <polyline points="19 15 19 5 9 5"></polyline>
+                    </svg>
+                </div>
             </div>
             <div class="zoom-controls">
                 <button class="zoom-btn" onclick="zoomOut(2)">-</button>
@@ -504,6 +540,13 @@
                 <img id="svgImage3" src="/AprendeAVotar/Simulador_Votacion/SVG/TarjetonAntioquia.svg"
                     alt="Tarjetón Electoral">
                 <canvas id="drawCanvas3"></canvas>
+                <div id="arrow3" class="guide-arrow" style="--rot: -45deg;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="19" y1="5" x2="5" y2="19"></line>
+                        <polyline points="19 15 19 5 9 5"></polyline>
+                    </svg>
+                </div>
             </div>
             <div class="zoom-controls">
                 <button class="zoom-btn" onclick="zoomOut(3)">-</button>
@@ -594,6 +637,16 @@
                 drawCanvas.style.left = (imgRect.left - wrapperRect.left + wrapper.scrollLeft) + 'px';
                 drawCanvas.style.top = (imgRect.top - wrapperRect.top + wrapper.scrollTop) + 'px';
 
+                // Posicionar flecha
+                const arrow = document.getElementById(`arrow${pageNum}`);
+                if (arrow) {
+                    const arrowX = pageNum === 2 ? 0.65 : 0.81;
+                    const arrowY = pageNum === 2 ? 0.65 : 0.67;
+                    arrow.style.left = (imgRect.left - wrapperRect.left + imgRect.width * arrowX + wrapper.scrollLeft) + 'px';
+                    arrow.style.top = (imgRect.top - wrapperRect.top + imgRect.height * arrowY + wrapper.scrollTop) + 'px';
+                    arrow.classList.add('active');
+                }
+
                 redrawGlobalPaths(pageNum);
             });
         }
@@ -618,6 +671,10 @@
                     currentPath = [];
                     const pos = getMousePos(wrapper, drawCanvas, e);
                     currentPath.push(pos);
+
+                    // Ocultar flecha al empezar a rayar
+                    const arrow = document.getElementById(`arrow${pageNum}`);
+                    if (arrow) arrow.classList.remove('active');
 
                     ctx.beginPath();
                     ctx.moveTo(pos.x, pos.y);
