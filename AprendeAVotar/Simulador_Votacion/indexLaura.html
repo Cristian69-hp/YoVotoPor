@@ -640,8 +640,8 @@
                 // Posicionar flecha
                 const arrow = document.getElementById(`arrow${pageNum}`);
                 if (arrow) {
-                    const arrowX = pageNum === 2 ? 0.65 : 0.81;
-                    const arrowY = pageNum === 2 ? 0.65 : 0.67;
+                    const arrowX = pageNum === 2 ? 0.48 : 0.69;
+                    const arrowY = pageNum === 2 ? 0.80 : 0.72;
                     arrow.style.left = (imgRect.left - wrapperRect.left + imgRect.width * arrowX + wrapper.scrollLeft) + 'px';
                     arrow.style.top = (imgRect.top - wrapperRect.top + imgRect.height * arrowY + wrapper.scrollTop) + 'px';
                     arrow.classList.add('active');
