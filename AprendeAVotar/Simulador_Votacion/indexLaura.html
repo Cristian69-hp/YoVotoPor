@@ -9,8 +9,8 @@
         rel="stylesheet">
     <style>
         :root {
-            --primary-orange: #2563eb;
-            --primary-dark: #1e40af;
+            --primary-orange: #ba25eb;
+            --primary-dark: #8b1eaf;
             --bg-color: #0f172a;
             --paper-color: #ffffff;
             --text-main: #1e293b;
@@ -295,7 +295,7 @@
         }
 
         .result-badge {
-            background: linear-gradient(135deg, #3538ff 0%, #243be8 100%);
+            background: linear-gradient(135deg, #a135ff 0%, #a024e8 100%);
             padding: 25px;
             border-radius: 25px;
             margin: 30px 0;
@@ -493,7 +493,7 @@
 
         <div class="svg-container">
             <div class="svg-wrapper" id="svgWrapper3">
-                <img id="svgImage3" src="SVG/TarjetonSantander.svg" alt="Tarjetón Electoral">
+                <img id="svgImage3" src="SVG/TarjetonAntioquia.svg" alt="Tarjetón Electoral">
                 <canvas id="drawCanvas3"></canvas>
             </div>
             <div class="zoom-controls">
@@ -519,7 +519,7 @@
 
             <div class="result-badge">
                 <span class="result-number">106</span>
-                <span class="result-party">PARTIDO CONSERVADOR</span>
+                <span class="result-party">CR-LAU-MSN-OXI</span>
             </div>
 
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">
@@ -546,8 +546,8 @@
 
         // Zonas de validación ajustadas para cubrir los campos del tarjetón
         const validZones = {
-            party: { x: 0.1, y: 0.65, width: 0.3, height: 0.25 }, // Área del logo y nombre del partido
-            number: { x: 0.28, y: 0.75, width: 0.08, height: 0.08 }   // Área del número 104
+            party: { x: 0.5, y: 0.65, width: 0.3, height: 0.25 }, // Área del logo y nombre del partido
+            number: { x: 0.70, y: 0.69, width: 0.08, height: 0.03 }   // Área del número 104
         };
 
         function initializePage(pageNum) {
@@ -820,7 +820,7 @@
 
                         if (wrapper && svgImage) {
                             // Punto de enfoque relativo (0.26 para Paso 2, 0.5 para el resto)
-                            const focusX = pageNum === 3 ? 0.29 : 0.5;
+                            const focusX = pageNum === 3 ? 0.72 : 0.5;
                             const focusY = pageNum === 3 ? 0.76 : 0.5;
 
                             const targetX = svgImage.offsetLeft + (svgImage.offsetWidth * focusX);
