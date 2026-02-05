@@ -756,34 +756,100 @@
                 drawCanvas.addEventListener('mouseup', stopDrawing);
                 drawCanvas.addEventListener('mouseleave', stopDrawing);
 
-                // Touch events - Comportamiento Nativo
+                // Touch events - Zoom focal profesional
+                let initialFocalPoint = null; // Punto de enfoque relativo (0-1) dentro de la imagen
+
                 drawCanvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
                     if (e.touches.length === 1) {
-                        e.preventDefault();
                         touchIdentifier = e.touches[0].identifier;
                         startDrawing(e.touches[0]);
+                    } else if (e.touches.length === 2) {
+                        isDrawing = false;
+                        touchIdentifier = null;
+
+                        initialPinchDistance = Math.hypot(
+                            e.touches[0].pageX - e.touches[1].pageX,
+                            e.touches[0].pageY - e.touches[1].pageY
+                        );
+                        initialScale = scales[pageNum];
+
+                        // Calcular el centro del pinch relativo a la imagen (sin escala)
+                        const rect = drawCanvas.getBoundingClientRect();
+                        const pCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                        const pCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
+                        initialFocalPoint = {
+                            x: (pCenterX - rect.left) / rect.width,
+                            y: (pCenterY - rect.top) / rect.height
+                        };
+
+                        scrollAtPinchStart = {
+                            left: wrapper.scrollLeft,
+                            top: wrapper.scrollTop
+                        };
                     }
                 }, { passive: false });
 
                 drawCanvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
                     if (e.touches.length === 1 && isDrawing && touchIdentifier !== null) {
-                        e.preventDefault();
                         const touch = Array.from(e.touches).find(t => t.identifier === touchIdentifier);
                         if (touch) draw(touch);
+                    } else if (e.touches.length === 2 && initialPinchDistance && initialFocalPoint) {
+                        const currentDistance = Math.hypot(
+                            e.touches[0].pageX - e.touches[1].pageX,
+                            e.touches[0].pageY - e.touches[1].pageY
+                        );
+
+                        const newScale = Math.min(Math.max(initialScale * (currentDistance / initialPinchDistance), 0.5), 4);
+                        if (newScale === scales[pageNum]) return;
+
+                        const oldScale = scales[pageNum];
+                        scales[pageNum] = newScale;
+
+                        // Actualizar UI y Estilo
+                        const svgImage = document.getElementById(`svgImage${pageNum}`);
+                        document.getElementById(`zoomLevel${pageNum}`).textContent = `${Math.round(newScale * 100)}%`;
+                        svgImage.style.transform = `scale(${newScale})`;
+
+                        // Sincronizar canvas inmediatamente para evitar jitter
+                        setupCanvas(pageNum);
+
+                        // Mantener el punto focal bajo los dedos
+                        // El cambio en la posición visual del punto focal es: focalRelativa * (NuevaDimension - AntiguaDimension)
+                        const imgRect = svgImage.getBoundingClientRect();
+                        const deltaX = (rectWidth(svgImage) * (newScale - oldScale)) * initialFocalPoint.x;
+                        const deltaY = (rectHeight(svgImage) * (newScale - oldScale)) * initialFocalPoint.y;
+
+                        wrapper.scrollLeft += deltaX;
+                        wrapper.scrollTop += deltaY;
+
+                        redrawGlobalPaths(pageNum);
                     }
                 }, { passive: false });
 
+                function rectWidth(el) { return el.offsetWidth; }
+                function rectHeight(el) { return el.offsetHeight; }
+
                 drawCanvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
                     if (e.touches.length === 0) {
                         if (isDrawing) stopDrawing();
+                        initialPinchDistance = null;
+                        initialFocalPoint = null;
                         touchIdentifier = null;
+                    } else if (e.touches.length === 1) {
+                        initialPinchDistance = null;
+                        initialFocalPoint = null;
                     }
-                }, { passive: true });
+                }, { passive: false });
 
                 drawCanvas.addEventListener('touchcancel', (e) => {
                     e.preventDefault();
                     isDrawing = false;
                     initialPinchDistance = null;
+                    touchIdentifier = null;
                 }, { passive: false });
 
                 drawCanvas.dataset.listenersAdded = 'true';
@@ -862,24 +928,34 @@
                 initializePage(pageNum);
 
                 setTimeout(() => {
-                    const wrapper = document.getElementById(`svgWrapper${pageNum}`);
-                    const svgImage = document.getElementById(`svgImage${pageNum}`);
+                    updateZoom(pageNum);
 
-                    if (wrapper && svgImage) {
-                        // Sincronizar canvas antes de centrar
-                        setupCanvas(pageNum);
+                    // Sincronización instantánea tras el cambio de zoom
+                    setTimeout(() => {
+                        const wrapper = document.getElementById(`svgWrapper${pageNum}`);
+                        const svgImage = document.getElementById(`svgImage${pageNum}`);
 
-                        // Punto de enfoque relativo (0.5, 0.5 es el centro del tarjetón)
-                        const focusX = pageNum === 3 ? 0.72 : 0.5;
-                        const focusY = pageNum === 3 ? 0.77 : 0.4;
+                        if (wrapper && svgImage) {
+                            // Sincronizar canvas antes de centrar
+                            setupCanvas(pageNum);
 
-                        const visualX = svgImage.offsetLeft + (svgImage.offsetWidth * focusX);
-                        const visualY = svgImage.offsetTop + (svgImage.offsetHeight * focusY);
+                            const scale = scales[pageNum];
 
-                        wrapper.scrollLeft = visualX - (wrapper.clientWidth / 2);
-                        wrapper.scrollTop = visualY - (wrapper.clientHeight / 2);
-                    }
-                }, 100);
+                            // Punto de enfoque relativo (0.5, 0.5 es el centro del tarjetón)
+                            // En el paso 2 enfocamos un poco más a la derecha para ver a Laura
+                            const focusX = pageNum === 3 ? 0.72 : 0.5;
+                            const focusY = pageNum === 3 ? 0.76 : 0.5;
+
+                            // Con transform-origin: center center y coordenadas estables (sin Flex):
+                            // La posición visual de un punto (fX, fY) escalado es:
+                            const visualX = svgImage.offsetLeft + (svgImage.offsetWidth * focusX);
+                            const visualY = svgImage.offsetTop + (svgImage.offsetHeight * focusY);
+
+                            wrapper.scrollLeft = visualX - (wrapper.clientWidth / 2);
+                            wrapper.scrollTop = visualY - (wrapper.clientHeight / 2);
+                        }
+                    }, 100); // Delay reducido ya que no hay transición CSS
+                }, 50);
             }
         }
 
