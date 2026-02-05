@@ -146,7 +146,7 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
-            transform-origin: 80% 65%;
+            transform-origin: center center;
             margin: 100vh 100vw;
         }
 
@@ -895,8 +895,8 @@
                             setupCanvas(pageNum);
 
                             // Transform-origin is at 80% 65%
-                            const originX = 0.8;
-                            const originY = 0.65;
+                            const originX = 0.5;
+                            const originY = 0.5;
                             const scale = scales[pageNum];
 
                             // Punto de enfoque relativo (donde queremos centrar la vista)
