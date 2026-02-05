@@ -124,18 +124,20 @@
 
         .svg-wrapper {
             position: relative;
-            top: 0;
-            left: 0;
+            display: block;
+            /* Estabilidad total sin Flexbox */
             width: 100%;
             height: 100%;
             overflow: auto;
             cursor: crosshair;
-            touch-action: pan-x pan-y pinch-zoom;
+            touch-action: none;
+            /* Controlamos nosotros el touch */
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
             -webkit-overflow-scrolling: touch;
             padding: 0;
+            background: #f0f0f0;
         }
 
         .svg-wrapper img {
@@ -756,9 +758,8 @@
                 drawCanvas.addEventListener('mouseup', stopDrawing);
                 drawCanvas.addEventListener('mouseleave', stopDrawing);
 
-                // Touch events - Zoom con 2 dedos, dibujo con 1
-                let pinchCenter = null;
-                let scrollAtPinchStart = null;
+                // Touch events - Motor de Zoom Focal Profesional
+                let lastPinchCenter = null;
 
                 drawCanvas.addEventListener('touchstart', (e) => {
                     e.preventDefault();
@@ -768,22 +769,16 @@
                     } else if (e.touches.length === 2) {
                         isDrawing = false;
                         touchIdentifier = null;
+
                         initialPinchDistance = Math.hypot(
                             e.touches[0].pageX - e.touches[1].pageX,
                             e.touches[0].pageY - e.touches[1].pageY
                         );
                         initialScale = scales[pageNum];
 
-                        // Guardar punto medio entre los dedos
-                        pinchCenter = {
-                            x: (e.touches[0].pageX + e.touches[1].pageX) / 2,
-                            y: (e.touches[0].pageY + e.touches[1].pageY) / 2
-                        };
-
-                        // Guardar posición del scroll
-                        scrollAtPinchStart = {
-                            left: wrapper.scrollLeft,
-                            top: wrapper.scrollTop
+                        lastPinchCenter = {
+                            x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+                            y: (e.touches[0].clientY + e.touches[1].clientY) / 2
                         };
                     }
                 }, { passive: false });
@@ -793,53 +788,70 @@
                     if (e.touches.length === 1 && isDrawing && touchIdentifier !== null) {
                         const touch = Array.from(e.touches).find(t => t.identifier === touchIdentifier);
                         if (touch) draw(touch);
-                    } else if (e.touches.length === 2 && initialPinchDistance && pinchCenter) {
+                    } else if (e.touches.length === 2 && initialPinchDistance) {
                         const currentDistance = Math.hypot(
                             e.touches[0].pageX - e.touches[1].pageX,
                             e.touches[0].pageY - e.touches[1].pageY
                         );
+
+                        const newCenter = {
+                            x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+                            y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+                        };
+
                         const zoomFactor = currentDistance / initialPinchDistance;
                         const newScale = Math.min(Math.max(initialScale * zoomFactor, 0.5), 4);
 
-                        // Calcular diferencia de escala
-                        const scaleDiff = newScale / scales[pageNum];
-
-                        // Aplicar nuevo zoom
+                        const oldScale = scales[pageNum];
                         scales[pageNum] = newScale;
 
+                        // Actualizar UI
                         const svgImage = document.getElementById(`svgImage${pageNum}`);
-                        const zoomPercent = Math.round(newScale * 100);
-                        document.getElementById(`zoomLevel${pageNum}`).textContent = `${zoomPercent}%`;
+                        document.getElementById(`zoomLevel${pageNum}`).textContent = `${Math.round(newScale * 100)}%`;
                         svgImage.style.transform = `scale(${newScale})`;
 
-                        // Ajustar scroll para mantener el punto de zoom fijo
-                        const rect = wrapper.getBoundingClientRect();
-                        const relativeX = pinchCenter.x - rect.left;
-                        const relativeY = pinchCenter.y - rect.top;
+                        // Sincronizar canvas
+                        setupCanvas(pageNum);
 
-                        wrapper.scrollLeft = scrollAtPinchStart.left + (relativeX + scrollAtPinchStart.left) * (scaleDiff - 1);
-                        wrapper.scrollTop = scrollAtPinchStart.top + (relativeY + scrollAtPinchStart.top) * (scaleDiff - 1);
+                        // Lógica de Zoom Focal:
+                        // 1. Compensar el crecimiento/encogimiento del contenido relativo al centro del pinch
+                        const imgW = svgImage.offsetWidth;
+                        const imgH = svgImage.offsetHeight;
 
-                        // Actualizar canvas
-                        setTimeout(() => {
-                            setupCanvas(pageNum);
-                            redrawGlobalPaths(pageNum);
-                        }, 0);
+                        // Punto relativo del pinch dentro de la imagen (usando el centro anterior para estabilidad)
+                        const rect = drawCanvas.getBoundingClientRect();
+                        const relX = (lastPinchCenter.x - rect.left) / rect.width;
+                        const relY = (lastPinchCenter.y - rect.top) / rect.height;
+
+                        const dx = (imgW * (newScale - oldScale)) * relX;
+                        const dy = (imgH * (newScale - oldScale)) * relY;
+
+                        // 2. Compensar el movimiento de los dedos (panning mientras se hace pinch)
+                        const panX = lastPinchCenter.x - newCenter.x;
+                        const panY = lastPinchCenter.y - newCenter.y;
+
+                        wrapper.scrollLeft += dx + panX;
+                        wrapper.scrollTop += dy + panY;
+
+                        lastPinchCenter = newCenter;
+                        redrawGlobalPaths(pageNum);
                     }
                 }, { passive: false });
+
+                function rectWidth(el) { return el.offsetWidth; }
+                function rectHeight(el) { return el.offsetHeight; }
 
                 drawCanvas.addEventListener('touchend', (e) => {
                     e.preventDefault();
                     if (e.touches.length === 0) {
                         if (isDrawing) stopDrawing();
                         initialPinchDistance = null;
+                        lastPinchCenter = null;
                         touchIdentifier = null;
-                        pinchCenter = null;
-                        scrollAtPinchStart = null;
-                    } else if (e.touches.length === 1 && initialPinchDistance) {
+                    } else if (e.touches.length === 1) {
                         initialPinchDistance = null;
-                        pinchCenter = null;
-                        scrollAtPinchStart = null;
+                        // Si queda un dedo, re-empezar el centro para panning suave si se implementara
+                        lastPinchCenter = null;
                     }
                 }, { passive: false });
 
@@ -937,18 +949,17 @@
                             // Sincronizar canvas antes de centrar
                             setupCanvas(pageNum);
 
-                            // Transform-origin is at 80% 65%
-                            const originX = 0.5;
-                            const originY = 0.5;
                             const scale = scales[pageNum];
 
-                            // Punto de enfoque relativo (donde queremos centrar la vista)
+                            // Punto de enfoque relativo (0.5, 0.5 es el centro del tarjetón)
+                            // En el paso 2 enfocamos un poco más a la derecha para ver a Laura
                             const focusX = pageNum === 3 ? 0.72 : 0.5;
-                            const focusY = pageNum === 3 ? 0.76 : 0.5;
+                            const focusY = pageNum === 3 ? 0.77 : 0.5;
 
-                            // Calcular la posición visual del centro considerando el transform-origin y la escala
-                            const visualX = svgImage.offsetLeft + (svgImage.offsetWidth * (originX + (focusX - originX) * scale));
-                            const visualY = svgImage.offsetTop + (svgImage.offsetHeight * (originY + (focusY - originY) * scale));
+                            // Con transform-origin: center center y coordenadas estables (sin Flex):
+                            // La posición visual de un punto (fX, fY) escalado es:
+                            const visualX = svgImage.offsetLeft + (svgImage.offsetWidth * focusX);
+                            const visualY = svgImage.offsetTop + (svgImage.offsetHeight * focusY);
 
                             wrapper.scrollLeft = visualX - (wrapper.clientWidth / 2);
                             wrapper.scrollTop = visualY - (wrapper.clientHeight / 2);
