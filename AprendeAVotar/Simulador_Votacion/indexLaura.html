@@ -672,6 +672,9 @@
                     const pos = getMousePos(wrapper, drawCanvas, e);
                     currentPath.push(pos);
 
+                    // Bloquear scroll mientras se raya
+                    wrapper.style.overflow = 'hidden';
+
                     // Ocultar flecha al empezar a rayar
                     const arrow = document.getElementById(`arrow${pageNum}`);
                     if (arrow) arrow.classList.remove('active');
@@ -695,6 +698,9 @@
                     if (!isDrawing) return;
                     isDrawing = false;
                     touchIdentifier = null;
+
+                    // Desbloquear scroll al terminar de rayar
+                    wrapper.style.overflow = 'auto';
 
                     if (currentPath.length > 5) {
                         allPaths.push([...currentPath]);
