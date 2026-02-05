@@ -618,22 +618,33 @@
             const wrapper = document.getElementById(`svgWrapper${pageNum}`);
 
             requestAnimationFrame(() => {
-                const imgRect = svgImage.getBoundingClientRect();
-                const wrapperRect = wrapper.getBoundingClientRect();
+                const scale = scales[pageNum];
+                const width = svgImage.offsetWidth;
+                const height = svgImage.offsetHeight;
 
-                drawCanvas.width = imgRect.width;
-                drawCanvas.height = imgRect.height;
+                // Calculamos la posición visual del "top-left" de la imagen transformada (origin center)
+                const visualLeft = svgImage.offsetLeft - (width * (scale - 1) / 2);
+                const visualTop = svgImage.offsetTop - (height * (scale - 1) / 2);
+
+                drawCanvas.width = width * scale;
+                drawCanvas.height = height * scale;
 
                 drawCanvas.style.position = 'absolute';
-                drawCanvas.style.left = (imgRect.left - wrapperRect.left + wrapper.scrollLeft) + 'px';
-                drawCanvas.style.top = (imgRect.top - wrapperRect.top + wrapper.scrollTop) + 'px';
+                drawCanvas.style.left = visualLeft + 'px';
+                drawCanvas.style.top = visualTop + 'px';
 
                 const arrow = document.getElementById(`arrow${pageNum}`);
                 if (arrow) {
-                    const arrowX = pageNum === 2 ? 0.48 : 0.69;
-                    const arrowY = pageNum === 2 ? 0.82 : 0.73;
-                    arrow.style.left = (imgRect.left - wrapperRect.left + imgRect.width * arrowX + wrapper.scrollLeft) + 'px';
-                    arrow.style.top = (imgRect.top - wrapperRect.top + imgRect.height * arrowY + wrapper.scrollTop) + 'px';
+                    const baseArrowX = pageNum === 2 ? 0.58 : 0.745;
+                    const baseArrowY = pageNum === 2 ? 0.82 : 0.73;
+
+                    // COMPENSACIÓN DINÁMICA: La flecha tiene un ancho fijo de 100px.
+                    // Para que la punta (el centro) quede en el lugar exacto, restamos el equivalente a 50px
+                    // en coordenadas relativas según el ancho visual actual (width * scale).
+                    const zoomCompensatedX = baseArrowX - (50 / (width * scale));
+
+                    arrow.style.left = (visualLeft + (width * scale * zoomCompensatedX)) + 'px';
+                    arrow.style.top = (visualTop + (height * scale * baseArrowY)) + 'px';
                     arrow.classList.add('active');
                 }
 
@@ -902,10 +913,9 @@
             document.getElementById(`zoomLevel${pageNum}`).textContent = `${zoomPercent}%`;
             svgImage.style.transform = `scale(${scale})`;
 
-            setTimeout(() => {
-                setupCanvas(pageNum);
-                redrawGlobalPaths(pageNum);
-            }, 70);
+            // Actualización inmediata para evitar lag visual
+            setupCanvas(pageNum);
+            redrawGlobalPaths(pageNum);
         }
 
         function goToPage(pageNum) {
