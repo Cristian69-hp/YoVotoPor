@@ -757,6 +757,9 @@
                 drawCanvas.addEventListener('mouseleave', stopDrawing);
 
                 // Touch events - Zoom con 2 dedos, dibujo con 1
+                let pinchCenter = null;
+                let scrollAtPinchStart = null;
+
                 drawCanvas.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     if (e.touches.length === 1) {
@@ -770,6 +773,18 @@
                             e.touches[0].pageY - e.touches[1].pageY
                         );
                         initialScale = scales[pageNum];
+
+                        // Guardar punto medio entre los dedos
+                        pinchCenter = {
+                            x: (e.touches[0].pageX + e.touches[1].pageX) / 2,
+                            y: (e.touches[0].pageY + e.touches[1].pageY) / 2
+                        };
+
+                        // Guardar posición del scroll
+                        scrollAtPinchStart = {
+                            left: wrapper.scrollLeft,
+                            top: wrapper.scrollTop
+                        };
                     }
                 }, { passive: false });
 
@@ -778,14 +793,38 @@
                     if (e.touches.length === 1 && isDrawing && touchIdentifier !== null) {
                         const touch = Array.from(e.touches).find(t => t.identifier === touchIdentifier);
                         if (touch) draw(touch);
-                    } else if (e.touches.length === 2 && initialPinchDistance) {
+                    } else if (e.touches.length === 2 && initialPinchDistance && pinchCenter) {
                         const currentDistance = Math.hypot(
                             e.touches[0].pageX - e.touches[1].pageX,
                             e.touches[0].pageY - e.touches[1].pageY
                         );
                         const zoomFactor = currentDistance / initialPinchDistance;
-                        scales[pageNum] = Math.min(Math.max(initialScale * zoomFactor, 0.5), 4);
-                        updateZoom(pageNum);
+                        const newScale = Math.min(Math.max(initialScale * zoomFactor, 0.5), 4);
+
+                        // Calcular diferencia de escala
+                        const scaleDiff = newScale / scales[pageNum];
+
+                        // Aplicar nuevo zoom
+                        scales[pageNum] = newScale;
+
+                        const svgImage = document.getElementById(`svgImage${pageNum}`);
+                        const zoomPercent = Math.round(newScale * 100);
+                        document.getElementById(`zoomLevel${pageNum}`).textContent = `${zoomPercent}%`;
+                        svgImage.style.transform = `scale(${newScale})`;
+
+                        // Ajustar scroll para mantener el punto de zoom fijo
+                        const rect = wrapper.getBoundingClientRect();
+                        const relativeX = pinchCenter.x - rect.left;
+                        const relativeY = pinchCenter.y - rect.top;
+
+                        wrapper.scrollLeft = scrollAtPinchStart.left + (relativeX + scrollAtPinchStart.left) * (scaleDiff - 1);
+                        wrapper.scrollTop = scrollAtPinchStart.top + (relativeY + scrollAtPinchStart.top) * (scaleDiff - 1);
+
+                        // Actualizar canvas
+                        setTimeout(() => {
+                            setupCanvas(pageNum);
+                            redrawGlobalPaths(pageNum);
+                        }, 0);
                     }
                 }, { passive: false });
 
@@ -795,8 +834,12 @@
                         if (isDrawing) stopDrawing();
                         initialPinchDistance = null;
                         touchIdentifier = null;
+                        pinchCenter = null;
+                        scrollAtPinchStart = null;
                     } else if (e.touches.length === 1 && initialPinchDistance) {
                         initialPinchDistance = null;
+                        pinchCenter = null;
+                        scrollAtPinchStart = null;
                     }
                 }, { passive: false });
 
