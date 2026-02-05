@@ -541,7 +541,7 @@
                     alt="Tarjetón Electoral">
                 <canvas id="drawCanvas3"></canvas>
                 <div id="arrow3" class="guide-arrow" style="--rot: -45deg;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round"
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#8B25EB" stroke-width="3" stroke-linecap="round"
                         stroke-linejoin="round">
                         <line x1="19" y1="5" x2="5" y2="19"></line>
                         <polyline points="19 15 19 5 9 5"></polyline>
@@ -641,7 +641,7 @@
                 const arrow = document.getElementById(`arrow${pageNum}`);
                 if (arrow) {
                     const arrowX = pageNum === 2 ? 0.48 : 0.69;
-                    const arrowY = pageNum === 2 ? 0.84 : 0.74;
+                    const arrowY = pageNum === 2 ? 0.84 : 0.75;
                     arrow.style.left = (imgRect.left - wrapperRect.left + imgRect.width * arrowX + wrapper.scrollLeft) + 'px';
                     arrow.style.top = (imgRect.top - wrapperRect.top + imgRect.height * arrowY + wrapper.scrollTop) + 'px';
                     arrow.classList.add('active');
