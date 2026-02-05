@@ -146,7 +146,7 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
-            transform-origin: 80% 65%;
+            transform-origin: center center;
             margin: 100vh 100vw;
         }
 
@@ -642,8 +642,15 @@
                 if (arrow) {
                     const arrowX = pageNum === 2 ? 0.48 : 0.69;
                     const arrowY = pageNum === 2 ? 0.82 : 0.73;
-                    arrow.style.left = (imgRect.left - wrapperRect.left + imgRect.width * arrowX + wrapper.scrollLeft) + 'px';
-                    arrow.style.top = (imgRect.top - wrapperRect.top + imgRect.height * arrowY + wrapper.scrollTop) + 'px';
+
+                    // Con transform-origin: center center, la posición visual de un punto (relX, relY) es:
+                    // visualPos = origin + (relPos - origin) * scale
+                    const scale = scales[pageNum];
+                    const visualX = imgRect.width * (0.5 + (arrowX - 0.5) * scale);
+                    const visualY = imgRect.height * (0.5 + (arrowY - 0.5) * scale);
+
+                    arrow.style.left = (imgRect.left - wrapperRect.left + visualX + wrapper.scrollLeft) + 'px';
+                    arrow.style.top = (imgRect.top - wrapperRect.top + visualY + wrapper.scrollTop) + 'px';
                     arrow.classList.add('active');
                 }
 
@@ -894,18 +901,13 @@
                             // Sincronizar canvas antes de centrar
                             setupCanvas(pageNum);
 
-                            // Transform-origin is at 80% 65%
-                            const originX = 0.8;
-                            const originY = 0.65;
+                            // Centrar el tarjetón (punto 0.5, 0.5 con transform-origin: center center siempre está en el centro geométrico)
                             const scale = scales[pageNum];
 
-                            // Punto de enfoque relativo (donde queremos centrar la vista)
-                            const focusX = pageNum === 3 ? 0.72 : 0.5;
-                            const focusY = pageNum === 3 ? 0.76 : 0.5;
-
-                            // Calcular la posición visual del centro considerando el transform-origin y la escala
-                            const visualX = svgImage.offsetLeft + (svgImage.offsetWidth * (originX + (focusX - originX) * scale));
-                            const visualY = svgImage.offsetTop + (svgImage.offsetHeight * (originY + (focusY - originY) * scale));
+                            // Con transform-origin center, el centro de la imagen siempre coincide con su posición offset + mitad de dimension
+                            // pero debido a la escala, el scroll debe apuntar a la posición visual
+                            const visualX = svgImage.offsetLeft + (svgImage.offsetWidth / 2);
+                            const visualY = svgImage.offsetTop + (svgImage.offsetHeight / 2);
 
                             wrapper.scrollLeft = visualX - (wrapper.clientWidth / 2);
                             wrapper.scrollTop = visualY - (wrapper.clientHeight / 2);
