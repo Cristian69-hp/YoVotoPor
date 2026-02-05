@@ -60,16 +60,11 @@
         }
 
         .welcome-card {
-            /* background: rgba(255, 255, 255, 0.1); */
-            /* backdrop-filter: blur(15px); */
             padding: 40px;
             border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             max-width: 600px;
             animation: fadeInDown 1s ease-out;
-            /* margin-top: -120px; */
-
-            /* Sube los textos */
         }
 
         h1 {
@@ -140,7 +135,6 @@
 
         .svg-wrapper img {
             display: block;
-            /* transition: transform 0.3s ease; */
             max-width: none;
             pointer-events: none;
             user-select: none;
@@ -428,7 +422,6 @@
             }
         }
 
-        /* Mobile Responsive */
         /* Guidance Arrows */
         .guide-arrow {
             position: absolute;
@@ -598,8 +591,8 @@
 
         // Zonas de validación ajustadas para cubrir los campos del tarjetón
         const validZones = {
-            party: { x: 0.35, y: 0.65, width: 0.4, height: 0.25 }, // Área del logo y nombre del partido
-            number: { x: 0.70, y: 0.69, width: 0.09, height: 0.03 }   // Área del número 104
+            party: { x: 0.35, y: 0.65, width: 0.4, height: 0.25 },
+            number: { x: 0.70, y: 0.69, width: 0.09, height: 0.03 }
         };
 
         function initializePage(pageNum) {
@@ -612,7 +605,6 @@
                 setupDrawing(pageNum);
             };
 
-            // Si la imagen ya está cargada
             if (svgImage.complete) {
                 setupCanvas(pageNum);
                 setupDrawing(pageNum);
@@ -625,7 +617,6 @@
             const drawCanvas = document.getElementById(`drawCanvas${pageNum}`);
             const wrapper = document.getElementById(`svgWrapper${pageNum}`);
 
-            // Usamos requestAnimationFrame para asegurar que el navegador ya calculó el zoom
             requestAnimationFrame(() => {
                 const imgRect = svgImage.getBoundingClientRect();
                 const wrapperRect = wrapper.getBoundingClientRect();
@@ -637,7 +628,6 @@
                 drawCanvas.style.left = (imgRect.left - wrapperRect.left + wrapper.scrollLeft) + 'px';
                 drawCanvas.style.top = (imgRect.top - wrapperRect.top + wrapper.scrollTop) + 'px';
 
-                // Posicionar flecha
                 const arrow = document.getElementById(`arrow${pageNum}`);
                 if (arrow) {
                     const arrowX = pageNum === 2 ? 0.48 : 0.69;
@@ -661,9 +651,8 @@
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
-            // Verificar si ya existen los event listeners para no duplicarlos
             if (!drawCanvas.dataset.listenersAdded) {
-                let allPaths = []; // Almacenar todas las líneas dibujadas
+                let allPaths = [];
 
                 function startDrawing(e) {
                     isDrawing = true;
@@ -672,10 +661,8 @@
                     const pos = getMousePos(wrapper, drawCanvas, e);
                     currentPath.push(pos);
 
-                    // Bloquear scroll mientras se raya
                     wrapper.style.overflow = 'hidden';
 
-                    // Ocultar flecha al empezar a rayar
                     const arrow = document.getElementById(`arrow${pageNum}`);
                     if (arrow) arrow.classList.remove('active');
 
@@ -699,7 +686,6 @@
                     isDrawing = false;
                     touchIdentifier = null;
 
-                    // Desbloquear scroll al terminar de rayar
                     wrapper.style.overflow = 'auto';
 
                     if (currentPath.length > 5) {
@@ -707,13 +693,10 @@
 
                         const zone = pageNum === 2 ? 'party' : 'number';
 
-                        // Validar si la línea actual está en la zona correcta
                         if (!isXInValidZone(currentPath, drawCanvas, zone)) {
                             showToast('¡Error! Inténtalo de nuevo.', 'error');
 
-                            // CORRECCIÓN AQUÍ:
                             setTimeout(() => {
-                                // En lugar de solo borrar, borramos y REDIBUJAMOS lo persistente
                                 allPaths = [];
                                 redrawGlobalPaths(pageNum);
                             }, 1000);
@@ -722,7 +705,6 @@
                             const isValid = allPaths.every(path => isXInValidZone(path, drawCanvas, zone));
 
                             if (isValid) {
-                                // Guardar trazos aprobados en el cajón de la página actual
                                 allPaths.forEach(path => {
                                     globalPaths[pageNum].push(path.map(p => ({
                                         relX: p.x / drawCanvas.width,
@@ -745,7 +727,6 @@
                     currentPath = [];
                 }
 
-                // Función para limpiar allPaths desde fuera
                 drawCanvas.clearPaths = function () {
                     allPaths = [];
                 };
@@ -756,8 +737,9 @@
                 drawCanvas.addEventListener('mouseup', stopDrawing);
                 drawCanvas.addEventListener('mouseleave', stopDrawing);
 
-                // Touch events - Zoom focal profesional
-                let initialFocalPoint = null; // Punto de enfoque relativo (0-1) dentro de la imagen
+                // Touch events - ZOOM LIBRE MEJORADO
+                let pinchCenter = null; // Centro del pinch en coordenadas del wrapper
+                let scrollBeforePinch = null;
 
                 drawCanvas.addEventListener('touchstart', (e) => {
                     e.preventDefault();
@@ -768,25 +750,28 @@
                         isDrawing = false;
                         touchIdentifier = null;
 
+                        // Calcular distancia inicial del pinch
                         initialPinchDistance = Math.hypot(
                             e.touches[0].pageX - e.touches[1].pageX,
                             e.touches[0].pageY - e.touches[1].pageY
                         );
                         initialScale = scales[pageNum];
 
-                        // Calcular el centro del pinch relativo a la imagen (sin escala)
-                        const rect = drawCanvas.getBoundingClientRect();
-                        const pCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                        const pCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                        // Calcular el centro del pinch en coordenadas del viewport
+                        const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                        const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
 
-                        initialFocalPoint = {
-                            x: (pCenterX - rect.left) / rect.width,
-                            y: (pCenterY - rect.top) / rect.height
-                        };
-
-                        scrollAtPinchStart = {
+                        // Guardar posición del scroll antes del pinch
+                        scrollBeforePinch = {
                             left: wrapper.scrollLeft,
                             top: wrapper.scrollTop
+                        };
+
+                        // Convertir el centro del pinch a coordenadas relativas del wrapper
+                        const wrapperRect = wrapper.getBoundingClientRect();
+                        pinchCenter = {
+                            x: centerX - wrapperRect.left + wrapper.scrollLeft,
+                            y: centerY - wrapperRect.top + wrapper.scrollTop
                         };
                     }
                 }, { passive: false });
@@ -796,52 +781,58 @@
                     if (e.touches.length === 1 && isDrawing && touchIdentifier !== null) {
                         const touch = Array.from(e.touches).find(t => t.identifier === touchIdentifier);
                         if (touch) draw(touch);
-                    } else if (e.touches.length === 2 && initialPinchDistance && initialFocalPoint) {
+                    } else if (e.touches.length === 2 && initialPinchDistance && pinchCenter) {
+                        // Calcular nueva distancia del pinch
                         const currentDistance = Math.hypot(
                             e.touches[0].pageX - e.touches[1].pageX,
                             e.touches[0].pageY - e.touches[1].pageY
                         );
 
+                        // Calcular nuevo factor de escala
                         const newScale = Math.min(Math.max(initialScale * (currentDistance / initialPinchDistance), 0.5), 4);
-                        if (newScale === scales[pageNum]) return;
 
-                        const oldScale = scales[pageNum];
-                        scales[pageNum] = newScale;
+                        if (newScale !== scales[pageNum]) {
+                            const oldScale = scales[pageNum];
+                            scales[pageNum] = newScale;
 
-                        // Actualizar UI y Estilo
-                        const svgImage = document.getElementById(`svgImage${pageNum}`);
-                        document.getElementById(`zoomLevel${pageNum}`).textContent = `${Math.round(newScale * 100)}%`;
-                        svgImage.style.transform = `scale(${newScale})`;
+                            // Actualizar UI
+                            const svgImage = document.getElementById(`svgImage${pageNum}`);
+                            document.getElementById(`zoomLevel${pageNum}`).textContent = `${Math.round(newScale * 100)}%`;
+                            svgImage.style.transform = `scale(${newScale})`;
 
-                        // Sincronizar canvas inmediatamente para evitar jitter
-                        setupCanvas(pageNum);
+                            // Calcular el factor de cambio de escala
+                            const scaleFactor = newScale / oldScale;
 
-                        // Mantener el punto focal bajo los dedos
-                        // El cambio en la posición visual del punto focal es: focalRelativa * (NuevaDimension - AntiguaDimension)
-                        const imgRect = svgImage.getBoundingClientRect();
-                        const deltaX = (rectWidth(svgImage) * (newScale - oldScale)) * initialFocalPoint.x;
-                        const deltaY = (rectHeight(svgImage) * (newScale - oldScale)) * initialFocalPoint.y;
+                            // Ajustar el scroll para mantener el punto focal
+                            // La nueva posición del scroll debe mantener el punto bajo los dedos
+                            wrapper.scrollLeft = pinchCenter.x * scaleFactor - (pinchCenter.x - scrollBeforePinch.left);
+                            wrapper.scrollTop = pinchCenter.y * scaleFactor - (pinchCenter.y - scrollBeforePinch.top);
 
-                        wrapper.scrollLeft += deltaX;
-                        wrapper.scrollTop += deltaY;
+                            // Actualizar el centro del pinch para el siguiente frame
+                            scrollBeforePinch = {
+                                left: wrapper.scrollLeft,
+                                top: wrapper.scrollTop
+                            };
 
-                        redrawGlobalPaths(pageNum);
+                            // Sincronizar canvas
+                            setupCanvas(pageNum);
+                            redrawGlobalPaths(pageNum);
+                        }
                     }
                 }, { passive: false });
-
-                function rectWidth(el) { return el.offsetWidth; }
-                function rectHeight(el) { return el.offsetHeight; }
 
                 drawCanvas.addEventListener('touchend', (e) => {
                     e.preventDefault();
                     if (e.touches.length === 0) {
                         if (isDrawing) stopDrawing();
                         initialPinchDistance = null;
-                        initialFocalPoint = null;
+                        pinchCenter = null;
+                        scrollBeforePinch = null;
                         touchIdentifier = null;
                     } else if (e.touches.length === 1) {
                         initialPinchDistance = null;
-                        initialFocalPoint = null;
+                        pinchCenter = null;
+                        scrollBeforePinch = null;
                     }
                 }, { passive: false });
 
@@ -849,6 +840,8 @@
                     e.preventDefault();
                     isDrawing = false;
                     initialPinchDistance = null;
+                    pinchCenter = null;
+                    scrollBeforePinch = null;
                     touchIdentifier = null;
                 }, { passive: false });
 
@@ -858,8 +851,6 @@
 
         function getMousePos(wrapper, canvas, e) {
             const rect = canvas.getBoundingClientRect();
-            const wrapperRect = wrapper.getBoundingClientRect();
-
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
 
@@ -882,7 +873,6 @@
                     insideCount++;
                 }
             }
-            // Aprobado si el 80% del trazo está dentro del campo de la imagen
             return (insideCount / path.length) > 0.8;
         }
 
@@ -904,7 +894,6 @@
             document.getElementById(`zoomLevel${pageNum}`).textContent = `${zoomPercent}%`;
             svgImage.style.transform = `scale(${scale})`;
 
-            // Actualizar canvas después del zoom
             setTimeout(() => {
                 setupCanvas(pageNum);
                 redrawGlobalPaths(pageNum);
@@ -919,9 +908,7 @@
                 registrarCompletado();
             }
 
-
             if (pageNum === 2 || pageNum === 3) {
-                // Forzar escala inicial si es necesario
                 if (pageNum === 2) scales[2] = 0.5;
                 if (pageNum === 3) scales[3] = 1.1;
 
@@ -930,31 +917,23 @@
                 setTimeout(() => {
                     updateZoom(pageNum);
 
-                    // Sincronización instantánea tras el cambio de zoom
                     setTimeout(() => {
                         const wrapper = document.getElementById(`svgWrapper${pageNum}`);
                         const svgImage = document.getElementById(`svgImage${pageNum}`);
 
                         if (wrapper && svgImage) {
-                            // Sincronizar canvas antes de centrar
                             setupCanvas(pageNum);
 
-                            const scale = scales[pageNum];
-
-                            // Punto de enfoque relativo (0.5, 0.5 es el centro del tarjetón)
-                            // En el paso 2 enfocamos un poco más a la derecha para ver a Laura
                             const focusX = pageNum === 3 ? 0.72 : 0.5;
                             const focusY = pageNum === 3 ? 0.76 : 0.5;
 
-                            // Con transform-origin: center center y coordenadas estables (sin Flex):
-                            // La posición visual de un punto (fX, fY) escalado es:
                             const visualX = svgImage.offsetLeft + (svgImage.offsetWidth * focusX);
                             const visualY = svgImage.offsetTop + (svgImage.offsetHeight * focusY);
 
                             wrapper.scrollLeft = visualX - (wrapper.clientWidth / 2);
                             wrapper.scrollTop = visualY - (wrapper.clientHeight / 2);
                         }
-                    }, 100); // Delay reducido ya que no hay transición CSS
+                    }, 100);
                 }, 50);
             }
         }
@@ -995,7 +974,6 @@
 
             ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
 
-            // Dibujamos los trazos de TODAS las páginas anteriores y la actual
             for (let p = 2; p <= pageNum; p++) {
                 if (!globalPaths[p]) continue;
 
@@ -1017,14 +995,12 @@
 
         function restart() {
             scales = { 2: 0.5, 3: 0.5 };
-            globalPaths = { 2: [], 3: [] }; // Resetear ambos cajones
+            globalPaths = { 2: [], 3: [] };
 
-            // Limpiar canvas y resetear allPaths
             document.querySelectorAll('canvas').forEach(c => {
                 const ctx = c.getContext('2d');
                 ctx.clearRect(0, 0, c.width, c.height);
 
-                // Resetear allPaths si existe la función
                 if (c.clearPaths) {
                     c.clearPaths();
                 }
