@@ -757,93 +757,64 @@
                 drawCanvas.addEventListener('mouseleave', stopDrawing);
 
                 // Touch events - Zoom focal profesional
-                let initialFocalPoint = null; // Punto de enfoque relativo (0-1) dentro de la imagen
+                let pinchStart = null;
 
                 drawCanvas.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    if (e.touches.length === 1) {
-                        touchIdentifier = e.touches[0].identifier;
-                        startDrawing(e.touches[0]);
-                    } else if (e.touches.length === 2) {
-                        isDrawing = false;
-                        touchIdentifier = null;
+                    if (e.touches.length === 2) {
+                        e.preventDefault();
 
-                        initialPinchDistance = Math.hypot(
-                            e.touches[0].pageX - e.touches[1].pageX,
-                            e.touches[0].pageY - e.touches[1].pageY
-                        );
-                        initialScale = scales[pageNum];
+                        const t1 = e.touches[0];
+                        const t2 = e.touches[1];
 
-                        // Calcular el centro del pinch relativo a la imagen (sin escala)
-                        const rect = drawCanvas.getBoundingClientRect();
-                        const pCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                        const pCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                        const rect = svgImage.getBoundingClientRect();
 
-                        initialFocalPoint = {
-                            x: (pCenterX - rect.left) / rect.width,
-                            y: (pCenterY - rect.top) / rect.height
-                        };
+                        const cx = (t1.clientX + t2.clientX) / 2;
+                        const cy = (t1.clientY + t2.clientY) / 2;
 
-                        scrollAtPinchStart = {
-                            left: wrapper.scrollLeft,
-                            top: wrapper.scrollTop
+                        pinchStart = {
+                            dist: Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY),
+                            scale: scales[pageNum],
+                            cxRel: (cx - rect.left) / rect.width,
+                            cyRel: (cy - rect.top) / rect.height,
+                            scrollLeft: wrapper.scrollLeft,
+                            scrollTop: wrapper.scrollTop,
+                            rectWidth: rect.width,
+                            rectHeight: rect.height
                         };
                     }
                 }, { passive: false });
 
                 drawCanvas.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    if (e.touches.length === 1 && isDrawing && touchIdentifier !== null) {
-                        const touch = Array.from(e.touches).find(t => t.identifier === touchIdentifier);
-                        if (touch) draw(touch);
-                    } else if (e.touches.length === 2 && initialPinchDistance && initialFocalPoint) {
-                        const currentDistance = Math.hypot(
-                            e.touches[0].pageX - e.touches[1].pageX,
-                            e.touches[0].pageY - e.touches[1].pageY
-                        );
+                    if (e.touches.length === 2 && pinchStart) {
+                        e.preventDefault();
 
-                        const newScale = Math.min(Math.max(initialScale * (currentDistance / initialPinchDistance), 0.5), 4);
-                        if (newScale === scales[pageNum]) return;
+                        const t1 = e.touches[0];
+                        const t2 = e.touches[1];
+
+                        const newDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+                        let newScale = pinchStart.scale * (newDist / pinchStart.dist);
+                        newScale = Math.max(0.5, Math.min(4, newScale));
 
                         const oldScale = scales[pageNum];
                         scales[pageNum] = newScale;
 
-                        // Actualizar UI y Estilo
-                        const svgImage = document.getElementById(`svgImage${pageNum}`);
-                        document.getElementById(`zoomLevel${pageNum}`).textContent = `${Math.round(newScale * 100)}%`;
                         svgImage.style.transform = `scale(${newScale})`;
+                        document.getElementById(`zoomLevel${pageNum}`).textContent = `${Math.round(newScale * 100)}%`;
 
-                        // Sincronizar canvas inmediatamente para evitar jitter
                         setupCanvas(pageNum);
 
-                        // Mantener el punto focal bajo los dedos
-                        // El cambio en la posición visual del punto focal es: focalRelativa * (NuevaDimension - AntiguaDimension)
-                        const imgRect = svgImage.getBoundingClientRect();
-                        const deltaX = (rectWidth(svgImage) * (newScale - oldScale)) * initialFocalPoint.x;
-                        const deltaY = (rectHeight(svgImage) * (newScale - oldScale)) * initialFocalPoint.y;
+                        const newW = pinchStart.rectWidth * (newScale / oldScale);
+                        const newH = pinchStart.rectHeight * (newScale / oldScale);
 
-                        wrapper.scrollLeft += deltaX;
-                        wrapper.scrollTop += deltaY;
+                        const dx = (newW - pinchStart.rectWidth) * pinchStart.cxRel;
+                        const dy = (newH - pinchStart.rectHeight) * pinchStart.cyRel;
 
-                        redrawGlobalPaths(pageNum);
+                        wrapper.scrollLeft = pinchStart.scrollLeft + dx;
+                        wrapper.scrollTop = pinchStart.scrollTop + dy;
                     }
                 }, { passive: false });
 
-                function rectWidth(el) { return el.offsetWidth; }
-                function rectHeight(el) { return el.offsetHeight; }
-
-                drawCanvas.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    if (e.touches.length === 0) {
-                        if (isDrawing) stopDrawing();
-                        initialPinchDistance = null;
-                        initialFocalPoint = null;
-                        touchIdentifier = null;
-                    } else if (e.touches.length === 1) {
-                        initialPinchDistance = null;
-                        initialFocalPoint = null;
-                    }
-                }, { passive: false });
+                drawCanvas.addEventListener('touchend', () => pinchStart = null, { passive: false });
 
                 drawCanvas.addEventListener('touchcancel', (e) => {
                     e.preventDefault();
