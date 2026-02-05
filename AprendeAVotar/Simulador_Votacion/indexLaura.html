@@ -140,14 +140,14 @@
 
         .svg-wrapper img {
             display: block;
-            /* transition: transform 0.3s ease; */
-            max-width: none;
+            width: 300%;
+            /* Tamaño base grande para permitir zoom out */
+            height: auto;
             pointer-events: none;
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
-            transform-origin: center center;
-            margin: 100vh 100vw;
+            /* Eliminar transform-origin y margin */
         }
 
         #drawCanvas {
@@ -764,30 +764,6 @@
                     if (e.touches.length === 1) {
                         touchIdentifier = e.touches[0].identifier;
                         startDrawing(e.touches[0]);
-                    } else if (e.touches.length === 2) {
-                        isDrawing = false;
-                        touchIdentifier = null;
-
-                        initialPinchDistance = Math.hypot(
-                            e.touches[0].pageX - e.touches[1].pageX,
-                            e.touches[0].pageY - e.touches[1].pageY
-                        );
-                        initialScale = scales[pageNum];
-
-                        // Calcular el centro del pinch relativo a la imagen (sin escala)
-                        const rect = drawCanvas.getBoundingClientRect();
-                        const pCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                        const pCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-
-                        initialFocalPoint = {
-                            x: (pCenterX - rect.left) / rect.width,
-                            y: (pCenterY - rect.top) / rect.height
-                        };
-
-                        scrollAtPinchStart = {
-                            left: wrapper.scrollLeft,
-                            top: wrapper.scrollTop
-                        };
                     }
                 }, { passive: false });
 
@@ -796,52 +772,14 @@
                     if (e.touches.length === 1 && isDrawing && touchIdentifier !== null) {
                         const touch = Array.from(e.touches).find(t => t.identifier === touchIdentifier);
                         if (touch) draw(touch);
-                    } else if (e.touches.length === 2 && initialPinchDistance && initialFocalPoint) {
-                        const currentDistance = Math.hypot(
-                            e.touches[0].pageX - e.touches[1].pageX,
-                            e.touches[0].pageY - e.touches[1].pageY
-                        );
-
-                        const newScale = Math.min(Math.max(initialScale * (currentDistance / initialPinchDistance), 0.5), 4);
-                        if (newScale === scales[pageNum]) return;
-
-                        const oldScale = scales[pageNum];
-                        scales[pageNum] = newScale;
-
-                        // Actualizar UI y Estilo
-                        const svgImage = document.getElementById(`svgImage${pageNum}`);
-                        document.getElementById(`zoomLevel${pageNum}`).textContent = `${Math.round(newScale * 100)}%`;
-                        svgImage.style.transform = `scale(${newScale})`;
-
-                        // Sincronizar canvas inmediatamente para evitar jitter
-                        setupCanvas(pageNum);
-
-                        // Mantener el punto focal bajo los dedos
-                        // El cambio en la posición visual del punto focal es: focalRelativa * (NuevaDimension - AntiguaDimension)
-                        const imgRect = svgImage.getBoundingClientRect();
-                        const deltaX = (rectWidth(svgImage) * (newScale - oldScale)) * initialFocalPoint.x;
-                        const deltaY = (rectHeight(svgImage) * (newScale - oldScale)) * initialFocalPoint.y;
-
-                        wrapper.scrollLeft += deltaX;
-                        wrapper.scrollTop += deltaY;
-
-                        redrawGlobalPaths(pageNum);
                     }
                 }, { passive: false });
-
-                function rectWidth(el) { return el.offsetWidth; }
-                function rectHeight(el) { return el.offsetHeight; }
 
                 drawCanvas.addEventListener('touchend', (e) => {
                     e.preventDefault();
                     if (e.touches.length === 0) {
                         if (isDrawing) stopDrawing();
-                        initialPinchDistance = null;
-                        initialFocalPoint = null;
                         touchIdentifier = null;
-                    } else if (e.touches.length === 1) {
-                        initialPinchDistance = null;
-                        initialFocalPoint = null;
                     }
                 }, { passive: false });
 
@@ -887,24 +825,45 @@
         }
 
         function zoomIn(pageNum) {
-            scales[pageNum] = Math.min(scales[pageNum] + 0.3, 4);
-            updateZoom(pageNum);
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const currentWidth = parseFloat(svgImage.style.width || '300%');
+            const newWidth = Math.min(currentWidth + 50, 800); // Máximo 800%
+
+            svgImage.style.width = newWidth + '%';
+            scales[pageNum] = newWidth / 100;
+
+            document.getElementById(`zoomLevel${pageNum}`).textContent = `${Math.round((newWidth / 3))}%`;
+
+            setTimeout(() => {
+                setupCanvas(pageNum);
+                redrawGlobalPaths(pageNum);
+            }, 50);
         }
 
         function zoomOut(pageNum) {
-            scales[pageNum] = Math.max(scales[pageNum] - 0.3, 0.5);
-            updateZoom(pageNum);
-        }
+            const svgImage = document.getElementById(`svgImage${pageNum}`);
+            const currentWidth = parseFloat(svgImage.style.width || '300%');
+            const newWidth = Math.max(currentWidth - 50, 100); // Mínimo 100%
 
+            svgImage.style.width = newWidth + '%';
+            scales[pageNum] = newWidth / 100;
+
+            document.getElementById(`zoomLevel${pageNum}`).textContent = `${Math.round((newWidth / 3))}%`;
+
+            setTimeout(() => {
+                setupCanvas(pageNum);
+                redrawGlobalPaths(pageNum);
+            }, 50);
+        }
         function updateZoom(pageNum) {
             const svgImage = document.getElementById(`svgImage${pageNum}`);
-            const scale = scales[pageNum];
-            const zoomPercent = Math.round(scale * 100);
+            const baseWidth = pageNum === 2 ? 300 : 330; // Diferentes tamaños iniciales
 
-            document.getElementById(`zoomLevel${pageNum}`).textContent = `${zoomPercent}%`;
-            svgImage.style.transform = `scale(${scale})`;
+            svgImage.style.width = baseWidth + '%';
+            scales[pageNum] = baseWidth / 100;
 
-            // Actualizar canvas después del zoom
+            document.getElementById(`zoomLevel${pageNum}`).textContent = `${Math.round((baseWidth / 3))}%`;
+
             setTimeout(() => {
                 setupCanvas(pageNum);
                 redrawGlobalPaths(pageNum);
@@ -936,25 +895,13 @@
                         const svgImage = document.getElementById(`svgImage${pageNum}`);
 
                         if (wrapper && svgImage) {
-                            // Sincronizar canvas antes de centrar
                             setupCanvas(pageNum);
 
-                            const scale = scales[pageNum];
-
-                            // Punto de enfoque relativo (0.5, 0.5 es el centro del tarjetón)
-                            // En el paso 2 enfocamos un poco más a la derecha para ver a Laura
-                            const focusX = pageNum === 3 ? 0.72 : 0.5;
-                            const focusY = pageNum === 3 ? 0.76 : 0.5;
-
-                            // Con transform-origin: center center y coordenadas estables (sin Flex):
-                            // La posición visual de un punto (fX, fY) escalado es:
-                            const visualX = svgImage.offsetLeft + (svgImage.offsetWidth * focusX);
-                            const visualY = svgImage.offsetTop + (svgImage.offsetHeight * focusY);
-
-                            wrapper.scrollLeft = visualX - (wrapper.clientWidth / 2);
-                            wrapper.scrollTop = visualY - (wrapper.clientHeight / 2);
+                            // Scroll simple al centro
+                            wrapper.scrollLeft = (svgImage.offsetWidth - wrapper.clientWidth) / 2;
+                            wrapper.scrollTop = (svgImage.offsetHeight - wrapper.clientHeight) / 2;
                         }
-                    }, 100); // Delay reducido ya que no hay transición CSS
+                    }, 100);
                 }, 50);
             }
         }
