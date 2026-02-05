@@ -758,7 +758,7 @@
 
                 // Touch events - Zoom con 2 dedos, dibujo con 1
                 let pinchCenter = null;
-                let initialScrollPos = null;
+                let scrollAtPinchStart = null;
 
                 drawCanvas.addEventListener('touchstart', (e) => {
                     e.preventDefault();
@@ -768,27 +768,20 @@
                     } else if (e.touches.length === 2) {
                         isDrawing = false;
                         touchIdentifier = null;
-
-                        const rect = wrapper.getBoundingClientRect();
-                        const imgRect = svgImage.getBoundingClientRect();
-
-                        // Punto medio entre los dedos en coordenadas de pantalla
-                        const screenCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                        const screenCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-
-                        // Convertir a coordenadas relativas a la imagen (0 a 1)
-                        pinchCenter = {
-                            relX: (screenCenterX - imgRect.left) / imgRect.width,
-                            relY: (screenCenterY - imgRect.top) / imgRect.height
-                        };
-
                         initialPinchDistance = Math.hypot(
                             e.touches[0].pageX - e.touches[1].pageX,
                             e.touches[0].pageY - e.touches[1].pageY
                         );
-
                         initialScale = scales[pageNum];
-                        initialScrollPos = {
+
+                        // Guardar punto medio entre los dedos
+                        pinchCenter = {
+                            x: (e.touches[0].pageX + e.touches[1].pageX) / 2,
+                            y: (e.touches[0].pageY + e.touches[1].pageY) / 2
+                        };
+
+                        // Guardar posición del scroll
+                        scrollAtPinchStart = {
                             left: wrapper.scrollLeft,
                             top: wrapper.scrollTop
                         };
@@ -805,38 +798,33 @@
                             e.touches[0].pageX - e.touches[1].pageX,
                             e.touches[0].pageY - e.touches[1].pageY
                         );
-
                         const zoomFactor = currentDistance / initialPinchDistance;
                         const newScale = Math.min(Math.max(initialScale * zoomFactor, 0.5), 4);
 
-                        // Aplicar zoom
+                        // Calcular diferencia de escala
+                        const scaleDiff = newScale / scales[pageNum];
+
+                        // Aplicar nuevo zoom
                         scales[pageNum] = newScale;
+
                         const svgImage = document.getElementById(`svgImage${pageNum}`);
                         const zoomPercent = Math.round(newScale * 100);
                         document.getElementById(`zoomLevel${pageNum}`).textContent = `${zoomPercent}%`;
                         svgImage.style.transform = `scale(${newScale})`;
 
-                        // Esperar a que el navegador actualice el layout
-                        requestAnimationFrame(() => {
-                            const imgRect = svgImage.getBoundingClientRect();
-                            const rect = wrapper.getBoundingClientRect();
+                        // Ajustar scroll para mantener el punto de zoom fijo
+                        const rect = wrapper.getBoundingClientRect();
+                        const relativeX = pinchCenter.x - rect.left;
+                        const relativeY = pinchCenter.y - rect.top;
 
-                            // Calcular dónde debería estar el punto de pinch en coordenadas absolutas
-                            const targetX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                            const targetY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                        wrapper.scrollLeft = scrollAtPinchStart.left + (relativeX + scrollAtPinchStart.left) * (scaleDiff - 1);
+                        wrapper.scrollTop = scrollAtPinchStart.top + (relativeY + scrollAtPinchStart.top) * (scaleDiff - 1);
 
-                            // Calcular dónde está ese punto relativo en la nueva escala
-                            const pointInImageX = pinchCenter.relX * imgRect.width;
-                            const pointInImageY = pinchCenter.relY * imgRect.height;
-
-                            // Ajustar scroll para mantener el punto de pinch fijo
-                            wrapper.scrollLeft = (imgRect.left - rect.left) + pointInImageX - (targetX - rect.left);
-                            wrapper.scrollTop = (imgRect.top - rect.top) + pointInImageY - (targetY - rect.top);
-
-                            // Actualizar canvas
+                        // Actualizar canvas
+                        setTimeout(() => {
                             setupCanvas(pageNum);
                             redrawGlobalPaths(pageNum);
-                        });
+                        }, 0);
                     }
                 }, { passive: false });
 
@@ -847,11 +835,11 @@
                         initialPinchDistance = null;
                         touchIdentifier = null;
                         pinchCenter = null;
-                        initialScrollPos = null;
+                        scrollAtPinchStart = null;
                     } else if (e.touches.length === 1 && initialPinchDistance) {
                         initialPinchDistance = null;
                         pinchCenter = null;
-                        initialScrollPos = null;
+                        scrollAtPinchStart = null;
                     }
                 }, { passive: false });
 
